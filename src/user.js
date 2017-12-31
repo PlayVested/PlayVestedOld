@@ -70,7 +70,7 @@ function registerUserEndpoints(app) {
 
                     // store the salt & hash in the "db"
                     const uuid = uuidv4();
-                    runQuery(`INSERT INTO users (id, name, password, hash, salt) VALUES ('${uuid}', '${req.body.username}', '${req.body.password}', '${hash}', '${salt}')`).then(
+                    runQuery(`INSERT INTO user (id, name, password, hash, salt) VALUES ('${uuid}', '${req.body.username}', '${req.body.password}', '${hash}', '${salt}')`).then(
                         (insertResults) => {
                             if (!module.parent) {
                                 console.log(`added user: ${req.body.username}`);

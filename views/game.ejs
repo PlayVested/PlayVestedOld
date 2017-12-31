@@ -38,11 +38,21 @@ Game data for <%- game.name %>:
                 <td>Contribution</td>
                 <td>Reward Percentage</td>
             </tr>
-            <% if (game && game.tier && game.tier.length > 0) { game.tier.forEach(function(t, t_index) { %>
+            <%
+                if (game && game.tier && game.tier.length > 0) {
+                    var lastContribution = -1;
+                    game.tier.forEach(function(t, t_index) {
+            %>
             <tr>
                 <td>
                     <input type="hidden" value="<%- t.id %>" name="id">
                     <input type="number" value="<%- t.contribution %>" name="contribution">
+                    <%
+                        if (lastContribution > t.contribution) { 
+                            message = `<p class="msg error">Error: Contribution does not appear to be ordered correctly, please double check</p>`;
+                        }
+                        lastContribution = t.contribution;
+                    %>
                 </td>
                 <td>
                     <input type="number" value="<%- t.reward %>" name="reward">
@@ -51,7 +61,10 @@ Game data for <%- game.name %>:
                     <a href="/delete_tier/<%- t.id %>">X</a>
                 </td>
             </tr>
-            <% });} %>
+            <%
+                    }); // game.tier.forEach()
+                } // if (game.tier.length)
+            %>
             <tr>
                 <td colspan="2" align="right">
                     <a style="text-decoration:underline; color:blue; cursor:pointer;" onclick="document.getElementById('createTier').submit();">Create Tier</a>

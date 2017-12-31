@@ -11,18 +11,6 @@ function registerGameEndpoints(app) {
     app.use((req, res, next) => {
         res.locals.game = req.session.game || {};
 
-        // do some validation of the data
-        if (req.session.game && req.session.game.tier instanceof Array) {
-            var lastContribution = -1;
-            for (var t of req.session.game.tier) {
-                if (lastContribution > t.contribution) {
-                    console.warn(`Found an error with contribution`);
-                    reportError(res, `Contribution does not appear to be ordered correctly, please double check`);
-                }
-                lastContribution = t.contribution;
-            }
-        }
-
         next();
     });
 

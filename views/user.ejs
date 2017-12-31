@@ -9,7 +9,11 @@
             <td>Name</td>
             <td>Percentage</td>
         </tr>
-        <% if (user.election && user.election.length > 0) { user.election.forEach(function(el, el_index) { %>
+        <%
+            if (user && user.election && user.election.length > 0) {
+                var electionTotal = 0;
+                user.election.forEach(function(el, el_index) {
+        %>
         <tr>
             <td>
                 <input type="hidden" value="<%- el.id %>" name="id">
@@ -20,19 +24,27 @@
             </td>
             <td>
                 <input type="number" value="<%- el.percentage %>" name="percentage">
+                <% electionTotal += el.percentage %>
             </td>
             <td>
                 <a href="/delete_election/<%- el.id %>">X</a>
             </td>
         </tr>
-        <% });} %>
+        <%
+                }); // user.election.forEach()
+            } // if (user.election.length)
+
+            if (electionTotal !== 100) {
+                message = `<p class="msg error">Error: Election total needs to add up to 100</p>`;
+            }
+        %>
         <tr>
             <td colspan="2" align="right">
                 <a style="text-decoration:underline; color:blue; cursor:pointer;" onclick="document.getElementById('createElection').submit();">Create Election</a>
             </td>
         </tr>
     </table>
-    <% if (user.election && user.election.length > 0) { %>
+    <% if (user && user.election && user.election.length > 0) { %>
     <br>
     <input type="submit" value="Save">
     <% } %>
@@ -42,18 +54,34 @@
     <form method="post" action="/create_election" id="createElection"></form>
 </p>
 
-<h2>Investments:</h2><br>
-<% if (user && user.investList && user.investList.length > 0) { user.investList.forEach(function(inst, index) { %>
-<a href="/invest/<%- inst.id %>"><%- inst.name %></a><br>
-<% });} %>
+<h2>Investments:</h2>
+<ul>
+<%
+    if (user && user.investList && user.investList.length > 0) {
+        user.investList.forEach(function(inst, index) {
+%>
+    <li><a href="/invest/<%- inst.id %>"><%- inst.name %></a></li>
+<%
+        }); // user.investList.forEach()
+    } // if (user.investList.length)
+%>
+</ul>
 <br>
 <a href="/create_invest">Create Investment</a>
 <br>
 
-<h2>Games:</h2><br>
-<% if (user && user.gameList && user.gameList.length > 0) { user.gameList.forEach(function(inst, index) { %>
-<a href="/game/<%- inst.id %>"><%- inst.name %></a><br>
-<% });} %>
+<h2>Games:</h2>
+<ul>
+<%
+    if (user && user.gameList && user.gameList.length > 0) {
+        user.gameList.forEach(function(inst, index) {
+%>
+    <li><a href="/game/<%- inst.id %>"><%- inst.name %></a></li>
+<%
+        }); // user.gameList.forEach()
+    } // if (user.gameList.length)
+%>
+</ul>
 <br>
 <a href="/create_game">Create Game</a>
 <br>
