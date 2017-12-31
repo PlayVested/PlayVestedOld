@@ -103,14 +103,14 @@ registerUserEndpoints(app);
 // fallback 404 handling
 // this needs to happen after all valid routes are defined
 app.use((req, res, next) => {
-    res.status(404).send("Sorry can't find that!");
+    res.status(404).render('not_found');
 });
 
 // error handling
 // this needs to happen last
 app.use((err, req, res, next) => {
     console.error(err.stack);
-    res.status(500).send('Something broke!');
+    res.status(500).render('error', {error: err});
 });
 
 if (!module.parent) {
