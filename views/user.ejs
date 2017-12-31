@@ -1,0 +1,62 @@
+<% var title = 'Authentication Example' %>
+<% include head %>
+
+<h1>User Info</h1>
+
+<h2>Elections:</h2>
+<form method="post" action="/election">
+    <table>
+        <tr>
+            <td>Name</td>
+            <td>Percentage</td>
+        </tr>
+        <% if (user.election && user.election.length > 0) { user.election.forEach(function(el, el_index) { %>
+        <tr>
+            <td>
+                <input type="hidden" value="<%- el.id %>" name="id">
+                <select value="<%- el.invest_id %>" name="invest_id">
+                    <option value="">Choose...</option>
+                    <% investments.forEach(function(invest, invest_index) { %><option value="<%- invest.id %>"<% if (el.invest_id === invest.id) { %> selected<% } %>><%- invest.name %></option><% }); %>
+                </select>
+            </td>
+            <td>
+                <input type="number" value="<%- el.percentage %>" name="percentage">
+            </td>
+            <td>
+                <a href="/delete_election/<%- el.id %>">X</a>
+            </td>
+        </tr>
+        <% });} %>
+        <tr>
+            <td colspan="2" align="right">
+                <a style="text-decoration:underline; color:blue; cursor:pointer;" onclick="document.getElementById('createElection').submit();">Create Election</a>
+            </td>
+        </tr>
+    </table>
+    <% if (user.election && user.election.length > 0) { %>
+    <br>
+    <input type="submit" value="Save">
+    <% } %>
+</form>
+
+<p>
+    <form method="post" action="/create_election" id="createElection"></form>
+</p>
+
+<h2>Investments:</h2><br>
+<% if (user && user.investList && user.investList.length > 0) { user.investList.forEach(function(inst, index) { %>
+<a href="/invest/<%- inst.id %>"><%- inst.name %></a><br>
+<% });} %>
+<br>
+<a href="/create_invest">Create Investment</a>
+<br>
+
+<h2>Games:</h2><br>
+<% if (user && user.gameList && user.gameList.length > 0) { user.gameList.forEach(function(inst, index) { %>
+<a href="/game/<%- inst.id %>"><%- inst.name %></a><br>
+<% });} %>
+<br>
+<a href="/create_game">Create Game</a>
+<br>
+
+<% include foot %>

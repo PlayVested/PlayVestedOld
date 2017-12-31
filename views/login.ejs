@@ -1,0 +1,24 @@
+<% var title = 'Authentication Example' %>
+<% include head %>
+
+<h1>Login</h1>
+
+<form method="post" action="/login">
+    <table>
+        <tr>
+            <td><label>Username:</label></td>
+            <td><input type="text" name="username"></td>
+        </tr>
+        <tr>
+            <td><label>Password:</label></td>
+            <td><input type="password" name="password"></td>
+        </tr>
+        <tr>
+            <td><input type="submit" value="Sign In"></td>
+            <td align="right">Not registerd? <a href="/create_user">Sign Up</a></td>
+        </tr>
+    </table>
+    <br>
+</form>
+
+<% include foot %>

@@ -1,0 +1,73 @@
+<% var title = 'Authentication Example' %>
+<% include head %>
+
+<h1>Game Info</h1>
+
+Game data for <%- game.name %>:
+<p>
+    <form method="post" action="/game">
+        <table>
+            <tr>
+                <td>
+                    Name:
+                </td>
+                <td>
+                    <input type="text" value="<%- game.name %>" name="name">
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    Decay Rate:
+                </td>
+                <td>
+                    <input type="number" value="<%- game.decay_rate %>" name="decay_rate">
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <input type="hidden" value="<%- game.id %>" name="id">
+                    <input type="submit" value="Save">
+                </td>
+            </tr>
+        </table>
+    </form>
+</p>
+<p>
+    <form method="post" action="/tier">
+        <table>
+            <tr>
+                <td>Contribution</td>
+                <td>Reward Percentage</td>
+            </tr>
+            <% if (game && game.tier && game.tier.length > 0) { game.tier.forEach(function(t, t_index) { %>
+            <tr>
+                <td>
+                    <input type="hidden" value="<%- t.id %>" name="id">
+                    <input type="number" value="<%- t.contribution %>" name="contribution">
+                </td>
+                <td>
+                    <input type="number" value="<%- t.reward %>" name="reward">
+                </td>
+                <td>
+                    <a href="/delete_tier/<%- t.id %>">X</a>
+                </td>
+            </tr>
+            <% });} %>
+            <tr>
+                <td colspan="2" align="right">
+                    <a style="text-decoration:underline; color:blue; cursor:pointer;" onclick="document.getElementById('createTier').submit();">Create Tier</a>
+                </td>
+            </tr>
+        </table>
+        <% if (game && game.tier && game.tier.length > 0) { %>
+        <br>
+        <input type="submit" value="Save">
+        <% } %>
+    </form>
+</p>
+
+<p>
+    <form method="post" action="/create_tier" id="createTier"></form>
+</p>
+
+<% include foot %>

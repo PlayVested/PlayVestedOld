@@ -1,0 +1,26 @@
+<% var title = 'Authentication Example' %>
+<% include head %>
+
+<h1>Create User</h1>
+
+<form method="post" action="/create_user">
+    <table>
+        <tr>
+            <td><label>Username:</label></td>
+            <td><input type="text" name="username"></td>
+        </tr>
+        <tr>
+            <td><label>Password:</label></td>
+            <td><input type="password" name="password"></td>
+        </tr>
+        <tr>
+            <td><label>Confirm Password:</label></td>
+            <td><input type="password" name="confirm_password"></td>
+        </tr>
+        <tr>
+            <td align="right" colspan="2"><input type="submit" value="Create User"></td>
+        </tr>
+    </table>
+</form>
+
+<% include foot %>

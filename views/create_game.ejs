@@ -1,0 +1,22 @@
+<% var title = 'Authentication Example' %>
+<% include head %>
+
+<h1>Create Game</h1>
+
+<form method="post" action="/create_game">
+    <table>
+        <tr>
+            <td><label>Name:</label></td>
+            <td><input type="text" name="name"></td>
+        </tr>
+        <tr>
+            <td><label>Reward Decay Rate:</label></td>
+            <td><input type="number" name="decay_rate"></td>
+        </tr>
+        <tr>
+            <td align="right" colspan="2"><input type="submit" value="Create Game"></td>
+        </tr>
+    </table>
+</form>
+
+<% include foot %>

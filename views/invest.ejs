@@ -1,0 +1,15 @@
+<% var title = 'Authentication Example' %>
+<% include head %>
+
+<h1>Investment Info</h1>
+
+Investment data for <%- invest.name %>:
+<p>
+    <form method="post" action="/invest">
+        <input type="text" value="<%- invest.name %>" name="name">
+        <input type="hidden" value="<%- invest.id %>" name="id">
+        <input type="submit" value="Save">
+    </form>
+</p>
+
+<% include foot %>

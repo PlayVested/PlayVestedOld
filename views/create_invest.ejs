@@ -1,0 +1,18 @@
+<% var title = 'Authentication Example' %>
+<% include head %>
+
+<h1>Create Investment</h1>
+
+<form method="post" action="/create_invest">
+    <table>
+        <tr>
+            <td><label>Name:</label></td>
+            <td><input type="text" name="name"></td>
+        </tr>
+        <tr>
+            <td align="right" colspan="2"><input type="submit" value="Create Investment"></td>
+        </tr>
+    </table>
+</form>
+
+<% include foot %>
