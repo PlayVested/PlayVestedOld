@@ -12,10 +12,7 @@ function authenticateUser(req, res, next) {
 
 function registerUserEndpoints(app) {
     app.use((req, res, next) => {
-        res.locals.user = {}
-        if (req.session.user) {
-            res.locals.user = req.session.user;
-        }
+        res.locals.user = req.session.user || {};
 
         res.locals.investments = [];
         if (req.session.investments) {

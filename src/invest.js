@@ -18,11 +18,7 @@ function cacheInvestmentList(req) {
 
 function registerInvestmentEndpoints(app) {
     app.use((req, res, next) => {
-        res.locals.invest = {};
-        if (req.session.invest) {
-            res.locals.invest = req.session.invest;
-        }
-
+        res.locals.invest = req.session.invest || {};
         next();
     });
 
