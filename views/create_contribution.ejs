@@ -1,0 +1,59 @@
+<% include head %>
+
+<%
+    var section = [
+        {
+            displayName: 'Investment',
+            tableName: 'invest',
+        },
+        {
+            displayName: 'Game',
+            tableName: 'game',
+        },
+    ];
+
+    section.forEach(function(sec, i) {
+%>
+
+<h2><%- sec.displayName %> Contribution</h2>
+
+<form method="post" action="/create_contribution">
+    <table>
+        <tr>
+            <td>
+                <label><%- sec.displayName %>:</label>
+            </td>
+            <td>
+                <select name="<%- sec.tableName %>_id">
+                    <option>Choose...</option>
+                    <%
+                        if (tables && tables[sec.tableName]) {
+                            Object.keys(tables[sec.tableName]).forEach(function(id, index) {
+                    %>
+                    <option value="<%- id %>"><%- tables[sec.tableName][id].name %></option>
+                    <%
+                            }); // forEach(tables[sec.tableName])
+                        } // if (tables[sec.tableName])
+                    %>
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <label>Amount: $</label>
+            </td>
+            <td>
+                <input type="number" name="amount">
+            </td>
+        </tr>
+        <tr>
+            <td align="right" colspan="2"><input type="submit" value="Contribute"></td>
+        </tr>
+    </table>
+</form>
+
+<%
+    }); // for (section)
+%>
+
+<% include foot %>

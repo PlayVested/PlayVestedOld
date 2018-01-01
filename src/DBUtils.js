@@ -58,20 +58,10 @@ function runQuery(sql) {
                 }
 
                 // done with the connection at this point, go ahead and close it
-                try {
-                    connection.end();
-                } catch (err) {
-                    console.log(`closing connection threw error ${typeof err} ${err.message}`);
-                    reject(err);
-                }
+                connection.end();
 
                 // fulfill the promise and return the results
-                try {
-                    resolve(result);
-                } catch (err) {
-                    console.log(`resolve threw error ${typeof err} ${err.message}`);
-                    reject(err);
-                }
+                resolve(result);
             });
         });
     });

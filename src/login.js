@@ -30,6 +30,19 @@ function authenticate(name, pass, fn) {
     );
 }
 
+function cacheTable(req, tableName) {
+    return runQuery(`SELECT * FROM ${tableName}`).then(
+        (tableResults) => {
+            req.session.tables = req.session.tables || {};
+            req.session.tables[tableName] = {};
+            for (var inst of tableResults) {
+                req.session.tables[tableName][inst.id] = inst;
+            }
+        },
+        defaultErrorHandler
+    );
+}
+
 function cacheUserList(user, param) {
     if (!user) {
         throw new Error('user is required to be valid');
@@ -90,18 +103,23 @@ function registerLoginEndpoints(app) {
                 // Regenerate session when signing in
                 // to prevent fixation
                 req.session.regenerate(() => {
+                    // set the user before we try to cache info
+                    req.session.user = user;
+
                     // pull info about which games/investments the user has rights to create/modify
                     var promises = [];
                     promises.push(cacheUserList(user, 'invest'));
                     promises.push(cacheUserList(user, 'game'));
-                    promises.push(cacheInvestmentList(req));
+                    promises.push(cacheTable(req, 'invest'));
+                    promises.push(cacheTable(req, 'game'));
+                    promises.push(refreshContributionCache(req));
+                    promises.push(refreshElectionCache(req));
 
                     Promise.all(promises).then(
                         (result) => { // success
                             // Store the user in the session store to be retrieved by other pages
-                            req.session.user = user;
                             reportSuccess(res, 'Authenticated as ' + user.name + ' click to <a href="/logout">logout</a>');
-                            res.redirect('/election'); // hit this endpoint to cache the user's election information
+                            res.redirect('/user');
                         }, 
                         defaultErrorHandler
                     );

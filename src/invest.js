@@ -7,21 +7,7 @@ function authenticateInvestment(req, res, next) {
     }
 }
 
-function cacheInvestmentList(req) {
-    return runQuery(`SELECT * FROM invest`).then(
-        (investResults) => {
-            req.session.investments = investResults;
-        },
-        defaultErrorHandler
-    );
-}
-
 function registerInvestmentEndpoints(app) {
-    app.use((req, res, next) => {
-        res.locals.invest = req.session.invest || {};
-        next();
-    });
-
     // hitting this endpoint with a specific ID will replace the investment data stored in the session
     app.get('/invest/:id', (req, res, next) => {
         const sql =
@@ -119,7 +105,7 @@ function registerInvestmentEndpoints(app) {
                     (allResults) => {
                         // update the list of investments stored in the session
                         promises = [];
-                        promises.push(cacheInvestmentList(req));
+                        promises.push(cacheTable(req, 'invest'));
                         promises.push(cacheUserList(req.session.user, 'invest'));
                         Promise.all(promises).then(
                             (cacheResult) => {

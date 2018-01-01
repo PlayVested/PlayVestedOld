@@ -8,12 +8,6 @@ function authenticateGame(req, res, next) {
 }
 
 function registerGameEndpoints(app) {
-    app.use((req, res, next) => {
-        res.locals.game = req.session.game || {};
-
-        next();
-    });
-
     // hitting this endpoint with a specific ID will replace the game data stored in the session
     app.get('/game/:id', (req, res, next) => {
         const sql =
@@ -112,26 +106,18 @@ function registerGameEndpoints(app) {
                 promises.push(runQuery(`INSERT INTO permission (id, user_id, game_id, is_admin) VALUES ('${uuidv4()}', '${req.session.user.id}', '${game.id}', '1')`));
                 Promise.all(promises).then(
                     (allResults) => {
-                        runQuery(`SELECT * FROM game WHERE id = '${game.id}'`).then(
-                            (gameResults) => {
-                                // we expect a single result, anything else is an error
-                                if (!(gameResults instanceof Array) || gameResults.length !== 1) {
-                                    throw new Error('Found too many games');
-                                    return;
-                                }
+                        // update the list of games stored in the session
+                        promises = [];
+                        promises.push(cacheTable(req, 'game'));
+                        promises.push(cacheUserList(req.session.user, 'game'));
+                        Promise.all(promises).then(
+                            (cacheResult) => {
+                                // let them know it worked
+                                reportSuccess(res, `Successfully created game ${gameName}`);
 
-                                // update the list of games stored in the session
-                                cacheUserList(req.session.user, 'game').then(
-                                    (cacheResult) => {
-                                        // let them know it worked
-                                        reportSuccess(res, `Successfully created game ${gameName}`);
-
-                                        // send them to the game page so they can edit tier info immediately
-                                        req.session.game = gameResults[0];
-                                        res.redirect('/game');
-                                    },
-                                    defaultErrorHandler
-                                );
+                                // send them to the game page so they can edit tier info immediately
+                                req.session.game = gameResults[0];
+                                res.redirect('/game');
                             },
                             defaultErrorHandler
                         );

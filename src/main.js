@@ -37,6 +37,7 @@ function clearStatusMessages() {
     storedErrorMsg = '';
 }
 
+// generic route used to populate the local copies of data used by HTML templating
 app.use((req, res, next) => {
     res.locals.message = '';
     if (storedErrorMsg) {
@@ -46,20 +47,10 @@ app.use((req, res, next) => {
     }
     clearStatusMessages();
 
-    // build the nav bar
-    res.locals.navigation = '';
-    if (req.session.user) {
-        res.locals.navigation = `<div align="center"><a href="/user">User</a>`;
-    }
-    if (req.session.game) {
-        res.locals.navigation += ` | <a href="/game">Game</a>`;
-    }
-    if (req.session.invest) {
-        res.locals.navigation += ` | <a href="/invest">Investment</a>`;
-    }
-    if (req.session.user) {
-        res.locals.navigation += `</div>`;
-    }
+    res.locals.game = req.session.game || {};
+    res.locals.invest = req.session.invest || {};
+    res.locals.tables = req.session.tables || {};
+    res.locals.user = req.session.user || {};
 
     next();
 });
@@ -93,6 +84,7 @@ app.get('/testing', (req, res) => {
 });
 
 // register all endpoints from sub-systems
+registerContributionEndpoints(app);
 registerElectionEndpoints(app);
 registerGameEndpoints(app);
 registerInvestmentEndpoints(app);

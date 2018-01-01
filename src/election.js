@@ -9,14 +9,19 @@ function authenticateElection(req, res, next) {
 
 function refreshElectionCache(req, res) {
     if (!req.session.user) {
-        res.redirect('/');
+        if (res) {
+            res.redirect('/');
+        }
+        console.log(`failed to refresh elections`);
+        return Promise.resolve([]);
     }
 
-    runQuery(`SELECT * FROM election WHERE user_id = '${req.session.user.id}'`).then(
+    return runQuery(`SELECT * FROM election WHERE user_id = '${req.session.user.id}'`).then(
         (electionResults) => {
             req.session.user.election = electionResults;
-            console.log(`electionResults`);
-            res.redirect('/user');
+            if (res) {
+                res.redirect('/user');
+            }
         },
         defaultErrorHandler
     );

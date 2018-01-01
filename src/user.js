@@ -11,17 +11,6 @@ function authenticateUser(req, res, next) {
 }
 
 function registerUserEndpoints(app) {
-    app.use((req, res, next) => {
-        res.locals.user = req.session.user || {};
-
-        res.locals.investments = [];
-        if (req.session.investments) {
-            res.locals.investments = req.session.investments;
-        }
-
-        next();
-    });
-
     app.get('/user', authenticateUser, (req, res) => {
         res.render('user');
     });

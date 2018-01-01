@@ -2,6 +2,58 @@
 
 <h1>User Info</h1>
 
+<% 
+    if (user && user.contribution) {
+        var section = [
+            {
+                displayName: 'Investments',
+                tableName: 'invest',
+            },
+            {
+                displayName: 'Games',
+                tableName: 'game',
+            },
+        ];
+%>
+<h2>Summary:</h2>
+<%
+        section.forEach(function(sec, i) {
+%>
+<h3><%- sec.displayName %>:</h3>
+<table>
+<% 
+            var totalContribution = 0;
+            var id = sec.tableName + '_id';
+            user.contribution.forEach(function(c, index) {
+                if (c[id] !== 'undefined') {
+                    totalContribution += c.amount;
+%>
+    <tr>
+        <td>
+            <%- tables[sec.tableName][c[id]].name %>: 
+        </td>
+        <td align="right">
+            $<%- c.amount %>
+        </td>
+    </tr>
+<%
+                } // if (id)
+            }); // forEach(contribution)
+%>
+    <tr>
+        <td>
+            <h3>Total:</h3>
+        </td>
+        <td align="right">
+            <h3>$<%-totalContribution %></h3>
+        </td>
+    </tr>
+</table>
+<%
+        }); // forEach(section)
+    } // if (user.contribution)
+%>
+
 <h2>Elections:</h2>
 <form method="post" action="/election">
     <table>
@@ -19,7 +71,7 @@
                 <input type="hidden" value="<%- el.id %>" name="id">
                 <select value="<%- el.invest_id %>" name="invest_id">
                     <option value="">Choose...</option>
-                    <% investments.forEach(function(invest, invest_index) { %><option value="<%- invest.id %>"<% if (el.invest_id === invest.id) { %> selected<% } %>><%- invest.name %></option><% }); %>
+                    <% if (tables && tables.invest) { Object.keys(tables.invest).forEach(function(id, invest_index) { %><option value="<%- id %>"<% if (el.invest_id === id) { %> selected<% } %>><%- tables.invest[id].name %></option><% });} %>
                 </select>
             </td>
             <td>
@@ -54,7 +106,7 @@
     <form method="post" action="/create_election" id="createElection"></form>
 </p>
 
-<h2>Investments:</h2>
+<h2>Manage Investments:</h2>
 <ul>
 <%
     if (user && user.investList && user.investList.length > 0) {
@@ -70,7 +122,7 @@
 <a href="/create_invest">Create Investment</a>
 <br>
 
-<h2>Games:</h2>
+<h2>Manage Games:</h2>
 <ul>
 <%
     if (user && user.gameList && user.gameList.length > 0) {
