@@ -10,15 +10,19 @@
                 font: 13px Helvetica, Arial, sans-serif;
             }
             .error {
-                color: red
+                color: red;
             }
             .success {
                 color: green;
             }
+            div {
+                padding-left: 30px;
+            }
         </style>
     </head>
     <body>
-        <div align="center">
-            <a href="/user">User</a> | <a href="/game">Game</a> | <a href="/invest">Investment</a> | <a href="/create_contribution">Contribute</a>
+        <div align="right">
+            <% if (user) { %>
+                <a href="/user">Home</a> | <a href="/logout">logout</a>
+            <% } %>
         </div>
-        <div align="right"><a href="/logout">logout</a></div>

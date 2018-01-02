@@ -12,7 +12,6 @@ function refreshElectionCache(req, res) {
         if (res) {
             res.redirect('/');
         }
-        console.log(`failed to refresh elections`);
         return Promise.resolve([]);
     }
 

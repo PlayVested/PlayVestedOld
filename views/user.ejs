@@ -1,110 +1,113 @@
 <% include head %>
 
-<h1>User Info</h1>
+<div align="center">
+    <h1>User Info</h1>
+</div>
 
-<% 
-    if (user && user.contribution) {
-        var section = [
-            {
-                displayName: 'Investments',
-                tableName: 'invest',
-            },
-            {
-                displayName: 'Games',
-                tableName: 'game',
-            },
-        ];
-%>
 <h2>Summary:</h2>
-<%
-        section.forEach(function(sec, i) {
-%>
-<h3><%- sec.displayName %>:</h3>
-<table>
-<% 
-            var totalContribution = 0;
-            var id = sec.tableName + '_id';
-            user.contribution.forEach(function(c, index) {
-                if (c[id] !== 'undefined') {
-                    totalContribution += c.amount;
-%>
-    <tr>
-        <td>
-            <%- tables[sec.tableName][c[id]].name %>: 
-        </td>
-        <td align="right">
-            $<%- c.amount %>
-        </td>
-    </tr>
-<%
-                } // if (id)
-            }); // forEach(contribution)
-%>
-    <tr>
-        <td>
-            <h3>Total:</h3>
-        </td>
-        <td align="right">
-            <h3>$<%-totalContribution %></h3>
-        </td>
-    </tr>
-</table>
-<%
-        }); // forEach(section)
-    } // if (user.contribution)
-%>
-
-<h2>Elections:</h2>
-<form method="post" action="/election">
+<div>
+    <%
+        if (user && user.contribution) {
+            var section = [
+                {
+                    displayName: 'Investments',
+                    tableName: 'invest',
+                },
+                {
+                    displayName: 'Games',
+                    tableName: 'game',
+                },
+            ];
+            section.forEach(function(sec, i) {
+    %>
+    <h3><%- sec.displayName %>:</h3>
     <table>
-        <tr>
-            <td>Name</td>
-            <td>Percentage</td>
-        </tr>
-        <%
-            if (user && user.election && user.election.length > 0) {
-                var electionTotal = 0;
-                user.election.forEach(function(el, el_index) {
-        %>
+    <%
+                var totalContribution = 0;
+                var id = sec.tableName + '_id';
+                user.contribution.forEach(function(c, index) {
+                    if (c[id] !== 'undefined') {
+                        totalContribution += c.amount;
+    %>
         <tr>
             <td>
-                <input type="hidden" value="<%- el.id %>" name="id">
-                <select value="<%- el.invest_id %>" name="invest_id">
-                    <option value="">Choose...</option>
-                    <% if (tables && tables.invest) { Object.keys(tables.invest).forEach(function(id, invest_index) { %><option value="<%- id %>"<% if (el.invest_id === id) { %> selected<% } %>><%- tables.invest[id].name %></option><% });} %>
-                </select>
+                <%- tables[sec.tableName][c[id]].name %>: 
             </td>
-            <td>
-                <input type="number" value="<%- el.percentage %>" name="percentage">
-                <% electionTotal += el.percentage %>
-            </td>
-            <td>
-                <a href="/delete_election/<%- el.id %>">X</a>
+            <td align="right">
+                $<%- c.amount %>
             </td>
         </tr>
-        <%
-                }); // user.election.forEach()
-            } // if (user.election.length)
-
-            if (electionTotal !== 100) {
-                message = `<p class="msg error">Error: Election total needs to add up to 100</p>`;
-            }
-        %>
+    <%
+                    } // if (id)
+                }); // forEach(contribution)
+    %>
         <tr>
-            <td colspan="2" align="right">
-                <a style="text-decoration:underline; color:blue; cursor:pointer;" onclick="document.getElementById('createElection').submit();">Create Election</a>
+            <td>
+                <h3>Total:</h3>
+            </td>
+            <td align="right">
+                <h3>$<%-totalContribution %></h3>
             </td>
         </tr>
     </table>
-    <% if (user && user.election && user.election.length > 0) { %>
-    <br>
-    <input type="submit" value="Save">
-    <% } %>
-</form>
+    <%
+            }); // forEach(section)
+        } // if (user.contribution)
+    %>
+    <a href="/create_contribution">Contribute</a>
+</div>
 
-<p>
+<h2>Elections:</h2>
+<div>
+    <form method="post" action="/election">
+        <table>
+            <tr>
+                <td>Name</td>
+                <td>Percentage</td>
+            </tr>
+            <%
+                if (user && user.election && user.election.length > 0) {
+                    var electionTotal = 0;
+                    user.election.forEach(function(el, el_index) {
+            %>
+            <tr>
+                <td>
+                    <input type="hidden" value="<%- el.id %>" name="id">
+                    <select value="<%- el.invest_id %>" name="invest_id">
+                        <option value="">Choose...</option>
+                        <% if (tables && tables.invest) { Object.keys(tables.invest).forEach(function(id, invest_index) { %><option value="<%- id %>"<% if (el.invest_id === id) { %> selected<% } %>><%- tables.invest[id].name %></option><% });} %>
+                    </select>
+                </td>
+                <td>
+                    <input type="number" value="<%- el.percentage %>" name="percentage">
+                    <% electionTotal += el.percentage %>
+                </td>
+                <td>
+                    <a href="/delete_election/<%- el.id %>">X</a>
+                </td>
+            </tr>
+            <%
+                    }); // user.election.forEach()
+                } // if (user.election.length)
+
+                if (electionTotal !== 100) {
+                    message = `<p class="msg error">Error: Election total needs to add up to 100</p>`;
+                }
+            %>
+            <tr>
+                <td colspan="2" align="right">
+                    <a style="text-decoration:underline; color:blue; cursor:pointer;" onclick="document.getElementById('createElection').submit();">Create Election</a>
+                </td>
+            </tr>
+        </table>
+        <% if (user && user.election && user.election.length > 0) { %>
+        <br>
+        <input type="submit" value="Save">
+        <% } %>
+    </form>
+
     <form method="post" action="/create_election" id="createElection"></form>
-</p>
+</div>
 
 <h2>Manage Investments:</h2>
 <ul>
@@ -118,9 +121,9 @@
     } // if (user.investList.length)
 %>
 </ul>
-<br>
-<a href="/create_invest">Create Investment</a>
-<br>
+<div>
+    <a href="/create_invest">Create Investment</a>
+</div>
 
 <h2>Manage Games:</h2>
 <ul>
@@ -134,8 +137,8 @@
     } // if (user.gameList.length)
 %>
 </ul>
-<br>
-<a href="/create_game">Create Game</a>
-<br>
+<div>
+    <a href="/create_game">Create Game</a>
+</div>
 
 <% include foot %>

@@ -47,10 +47,10 @@ app.use((req, res, next) => {
     }
     clearStatusMessages();
 
-    res.locals.game = req.session.game || {};
-    res.locals.invest = req.session.invest || {};
-    res.locals.tables = req.session.tables || {};
-    res.locals.user = req.session.user || {};
+    res.locals.game = req.session.game;
+    res.locals.invest = req.session.invest;
+    res.locals.tables = req.session.tables;
+    res.locals.user = req.session.user;
 
     next();
 });
