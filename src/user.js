@@ -127,7 +127,7 @@ function registerUserEndpoints(app) {
                             req.session.user.salt = salt;
                             req.session.user.hash = hash;
 
-                            reportSuccess('User info updated!');
+                            reportSuccess(res, 'User info updated!');
                             res.redirect('back');
                         },
                         defaultErrorHandler
