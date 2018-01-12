@@ -21,8 +21,89 @@
         </style>
     </head>
     <body>
-        <div align="right">
-            <% if (user) { %>
-                <a href="/user">Home</a> | <a href="/logout">logout</a>
-            <% } %>
-        </div>
+        <table style="width:100%">
+            <tr>
+                <td style="width:125px">
+                    <a href="/">
+                        <img src="/img/pv_logo.jpg" alt="PlayVested">
+                    </a>
+                </td>
+                <td align="center">
+                    <img src="/img/pv_type.jpg" alt="PlayVested">
+                </td>
+                <td style="width:125px">
+                    <div align="right">
+                    <% if (user) { %>
+                        Hello, <nobr><%- (user.display_name ? user.display_name : user.name) %></nobr>
+                        <br>
+                        <a href="/logout">logout</a>
+                    <% } %>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <% if (user) { %>
+                    <table>
+                        <tr>
+                            <td>
+                                <a href="/election">Elections</a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <a href="/find_games">Find Games</a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <a href="/support">Support</a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <a href="/settings">Settings</a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <h2>Manage Investments:</h2>
+                                <ul>
+                                <%
+                                    if (user && user.investList && user.investList.length > 0) {
+                                        user.investList.forEach(function(inst, index) {
+                                %>
+                                    <li><a href="/invest/<%- inst.id %>"><%- inst.name %></a></li>
+                                <%
+                                        }); // user.investList.forEach()
+                                    } // if (user.investList.length)
+                                %>
+                                </ul>
+                                <div>
+                                    <a href="/create_invest">Create Investment</a>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <h2>Manage Games:</h2>
+                                <ul>
+                                <%
+                                    if (user && user.gameList && user.gameList.length > 0) {
+                                        user.gameList.forEach(function(inst, index) {
+                                %>
+                                    <li><a href="/game/<%- inst.id %>"><%- inst.name %></a></li>
+                                <%
+                                        }); // user.gameList.forEach()
+                                    } // if (user.gameList.length)
+                                %>
+                                </ul>
+                                <div>
+                                    <a href="/create_game">Create Game</a>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                    <% } %>
+                </td>
+                <td align="center">

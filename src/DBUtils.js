@@ -35,7 +35,7 @@ function runQuery(sql) {
     if (!connection) {
         reportError(res, 'Failed to connect to database');
         res.redirect('back');
-        return;
+        return Promise.reject('Failed to connect to database');
     }
 
     return new Promise((resolve, reject) => {

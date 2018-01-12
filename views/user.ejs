@@ -1,11 +1,10 @@
 <% include head %>
 
 <div align="center">
-    <h1>User Info</h1>
+    <h1>Summary</h1>
 </div>
 
-<h2>Summary:</h2>
-<div>
+<table><tr><td align="left">
     <%
         if (user && user.contribution) {
             var section = [
@@ -18,10 +17,14 @@
                     tableName: 'game',
                 },
             ];
+    %>
+    <table>
+    <%
             section.forEach(function(sec, i) {
     %>
-    <h3><%- sec.displayName %>:</h3>
-    <table>
+        <th colspan="2" align="left">
+            <h3><%- sec.displayName %>:</h3>
+        </th>
     <%
                 var totalContribution = 0;
                 var id = sec.tableName + '_id';
@@ -29,7 +32,7 @@
                     if (c[id] !== 'undefined') {
                         totalContribution += c.amount;
     %>
-        <tr>
+        <tr style="background-color:ghostwhite">
             <td>
                 <%- tables[sec.tableName][c[id]].name %>: 
             </td>
@@ -49,96 +52,18 @@
                 <h3>$<%-totalContribution %></h3>
             </td>
         </tr>
-    </table>
     <%
             }); // forEach(section)
+    %>
+        <tr>
+            <td colspan="2" align="center">
+                <a href="/create_contribution">Contribute</a>
+            </td>
+        </tr>
+    </table>
+    <%
         } // if (user.contribution)
     %>
-    <a href="/create_contribution">Contribute</a>
-</div>
-
-<h2>Elections:</h2>
-<div>
-    <form method="post" action="/election">
-        <table>
-            <tr>
-                <td>Name</td>
-                <td>Percentage</td>
-            </tr>
-            <%
-                if (user && user.election && user.election.length > 0) {
-                    var electionTotal = 0;
-                    user.election.forEach(function(el, el_index) {
-            %>
-            <tr>
-                <td>
-                    <input type="hidden" value="<%- el.id %>" name="id">
-                    <select value="<%- el.invest_id %>" name="invest_id">
-                        <option value="">Choose...</option>
-                        <% if (tables && tables.invest) { Object.keys(tables.invest).forEach(function(id, invest_index) { %><option value="<%- id %>"<% if (el.invest_id === id) { %> selected<% } %>><%- tables.invest[id].name %></option><% });} %>
-                    </select>
-                </td>
-                <td>
-                    <input type="number" value="<%- el.percentage %>" name="percentage">
-                    <% electionTotal += el.percentage %>
-                </td>
-                <td>
-                    <a href="/delete_election/<%- el.id %>">X</a>
-                </td>
-            </tr>
-            <%
-                    }); // user.election.forEach()
-                } // if (user.election.length)
-
-                if (electionTotal !== 100) {
-                    message = `<p class="msg error">Error: Election total needs to add up to 100</p>`;
-                }
-            %>
-            <tr>
-                <td colspan="2" align="right">
-                    <a style="text-decoration:underline; color:blue; cursor:pointer;" onclick="document.getElementById('createElection').submit();">Create Election</a>
-                </td>
-            </tr>
-        </table>
-        <% if (user && user.election && user.election.length > 0) { %>
-        <br>
-        <input type="submit" value="Save">
-        <% } %>
-    </form>
-
-    <form method="post" action="/create_election" id="createElection"></form>
-</div>
-
-<h2>Manage Investments:</h2>
-<ul>
-<%
-    if (user && user.investList && user.investList.length > 0) {
-        user.investList.forEach(function(inst, index) {
-%>
-    <li><a href="/invest/<%- inst.id %>"><%- inst.name %></a></li>
-<%
-        }); // user.investList.forEach()
-    } // if (user.investList.length)
-%>
-</ul>
-<div>
-    <a href="/create_invest">Create Investment</a>
-</div>
-
-<h2>Manage Games:</h2>
-<ul>
-<%
-    if (user && user.gameList && user.gameList.length > 0) {
-        user.gameList.forEach(function(inst, index) {
-%>
-    <li><a href="/game/<%- inst.id %>"><%- inst.name %></a></li>
-<%
-        }); // user.gameList.forEach()
-    } // if (user.gameList.length)
-%>
-</ul>
-<div>
-    <a href="/create_game">Create Game</a>
-</div>
+</td></tr></table>
 
 <% include foot %>

@@ -113,7 +113,6 @@ function registerLoginEndpoints(app) {
                     promises.push(cacheTable(req, 'invest'));
                     promises.push(cacheTable(req, 'game'));
                     promises.push(refreshContributionCache(req));
-                    promises.push(refreshElectionCache(req));
 
                     Promise.all(promises).then(
                         (result) => { // success

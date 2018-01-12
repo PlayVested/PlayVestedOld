@@ -1,0 +1,25 @@
+<% include head %>
+
+<div align="center">
+    <h1>Games</h1>
+</div>
+
+<table><tr><td align="left">
+    <table>
+    <%
+        if (tables && tables.game) {
+            Object.keys(tables.game).forEach(function(id, index) {
+    %>
+        <tr style="background-color:ghostwhite">
+            <td>
+                <%- tables.game[id].name %>
+            </td>
+        </tr>
+    <%
+            }); // forEach(game)
+        } // if (game)
+    %>
+    </table>
+</td></tr></table>
+
+<% include foot %>

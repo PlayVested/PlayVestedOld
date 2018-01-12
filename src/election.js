@@ -7,20 +7,10 @@ function authenticateElection(req, res, next) {
     }
 }
 
-function refreshElectionCache(req, res) {
-    if (!req.session.user) {
-        if (res) {
-            res.redirect('/');
-        }
-        return Promise.resolve([]);
-    }
-
+function refreshElectionCache(req) {
     return runQuery(`SELECT * FROM election WHERE user_id = '${req.session.user.id}'`).then(
         (electionResults) => {
             req.session.user.election = electionResults;
-            if (res) {
-                res.redirect('/user');
-            }
         },
         defaultErrorHandler
     );
@@ -29,7 +19,12 @@ function refreshElectionCache(req, res) {
 function registerElectionEndpoints(app) {
     // hitting it without an ID will load all valid elections for the active user
     app.get('/election', authenticateElection, (req, res) => {
-        refreshElectionCache(req, res);
+        refreshElectionCache(req).then(
+            (results) => {
+                res.render('election');
+            },
+            defaultErrorHandler
+        );
     });
 
     app.post('/election', authenticateElection, (req, res) => {

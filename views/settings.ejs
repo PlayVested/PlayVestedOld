@@ -1,0 +1,37 @@
+<% include head %>
+
+<h1>Update User Info</h1>
+
+<form method="post" action="/settings">
+    <table>
+        <tr>
+            <td><label>Username:</label></td>
+            <td><input type="text" name="username" value="<%- user.name %>"></td>
+        </tr>
+        <tr>
+            <td><label>Display Name:</label></td>
+            <td><input type="text" name="display_name" value="<%- user.display_name %>"></td>
+        </tr>
+        <tr>
+            <td><label>Email:</label></td>
+            <td><input type="text" name="email" value="<%- user.email %>"></td>
+        </tr>
+        <tr>
+            <td><label>Current Password:</label></td>
+            <td><input type="password" name="current_password"></td>
+        </tr>
+        <tr>
+            <td><label>New Password:</label></td>
+            <td><input type="password" name="new_password"></td>
+        </tr>
+        <tr>
+            <td><label>Confirm Password:</label></td>
+            <td><input type="password" name="confirm_password"></td>
+        </tr>
+        <tr>
+            <td align="right" colspan="2"><input type="submit" value="Save"></td>
+        </tr>
+    </table>
+</form>
+
+<% include foot %>

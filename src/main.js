@@ -17,18 +17,19 @@ app.use(session({
     saveUninitialized: false, // don't create session until something stored
     secret: 'shhhh, very secret'
 }));
+app.use(express.static('../public'));
 
 var storedSuccessMsg = '';
 var storedErrorMsg = '';
 function reportSuccess(res, msg) {
     storedSuccessMsg = '<p class="msg success">Status: ' + msg + '</p>';
-    if (res && !storedErrorMsg) {
+    if (res && res.locals) {
         res.locals.message = storedSuccessMsg;
     }
 }
 function reportError(res, err) {
     storedErrorMsg = '<p class="msg error">Error: ' + err + '</p>';
-    if (res) {
+    if (res && res.locals) {
         res.locals.message = storedErrorMsg;
     }
 }
@@ -89,6 +90,7 @@ registerElectionEndpoints(app);
 registerGameEndpoints(app);
 registerInvestmentEndpoints(app);
 registerLoginEndpoints(app);
+registerSupportEndpoints(app);
 registerTierEndpoints(app);
 registerUserEndpoints(app);
 

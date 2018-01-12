@@ -138,16 +138,8 @@ function registerGameEndpoints(app) {
         );
     });
 
-    app.get('/games', (req, res) => {
-        runQuery(`SELECT name FROM game`).then(
-            (gameResults) => {
-                var names = 'Current Games:<br>';
-                for (var game of gameResults) {
-                    names += game.name + '<br>';
-                }
-                res.send(names);
-            },
-            defaultErrorHandler
-        );
+    // display all games that support PlayVested
+    app.get('/find_games', (req, res) => {
+        res.render('find_games');
     });
 }
