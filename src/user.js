@@ -111,14 +111,17 @@ function registerUserEndpoints(app) {
             if (err) {
                 return reportError(res, err);
             } else if (hash === req.session.user.hash) {
-                return runQuery(`UPDATE user SET `+
-                                `name = '${req.body.username}', `+
-                                `display_name = '${req.body.display_name}', `+
-                                `email = '${req.body.email}', `+
-                                `password = '${ret_pass}', `+
-                                `salt = '${salt}', `+
-                                `hash = '${hash}' `+
-                                `WHERE id ='${req.session.user.id}'`).then(
+                const sql = `
+                    UPDATE user SET
+                        name = '${req.body.username}',
+                        display_name = '${req.body.display_name}',
+                        email = '${req.body.email}',
+                        password = '${ret_pass}',
+                        salt = '${salt}',
+                        hash = '${hash}'
+                    WHERE
+                        id ='${req.session.user.id}'`
+                return runQuery(sql).then(
                         (results) => {
                             req.session.user.name = req.body.username;
                             req.session.user.display_name = req.body.display_name;

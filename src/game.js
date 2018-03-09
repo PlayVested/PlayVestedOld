@@ -10,18 +10,18 @@ function authenticateGame(req, res, next) {
 function registerGameEndpoints(app) {
     // hitting this endpoint with a specific ID will replace the game data stored in the session
     app.get('/game/:id', (req, res, next) => {
-        const sql =
-            `SELECT ` +
-                `game.id, game.name, game.decay_rate, permission.is_admin ` +
-            `FROM ` +
-                `game ` +
-            `JOIN ` +
-                `permission ` +
-            `ON ` +
-                `permission.game_id = game.id ` +
-            `WHERE ` +
-                `permission.user_id = '${req.session.user.id}' AND ` +
-                `game.id = '${req.params.id}'`;
+        const sql = `
+            SELECT
+                game.id, game.name, game.decay_rate, permission.is_admin
+            FROM
+                game
+            JOIN
+                permission
+            ON
+                permission.game_id = game.id
+            WHERE
+                permission.user_id = '${req.session.user.id}' AND
+                game.id = '${req.params.id}'`;
         runQuery(sql).then(
             (gameResults) => {
                 if (gameResults instanceof Array && gameResults.length === 1) {

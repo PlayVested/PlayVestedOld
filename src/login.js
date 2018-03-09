@@ -48,17 +48,17 @@ function cacheUserList(user, param) {
         throw new Error('user is required to be valid');
     }
 
-    const sql =
-        `SELECT ` +
-            `${param}.id, ${param}.name ` +
-        `FROM ` +
-            `${param} ` +
-        `JOIN ` +
-            `permission ` +
-        `ON ` +
-            `permission.${param}_id = ${param}.id ` +
-        `WHERE ` +
-            `permission.user_id = '${user.id}' `;
+    const sql = `
+        SELECT
+            ${param}.id, ${param}.name
+        FROM
+            ${param}
+        JOIN
+            permission
+        ON
+            permission.${param}_id = ${param}.id
+        WHERE
+            permission.user_id = '${user.id}'`;
 
     // always clear out the stored value so it doesn't remain stale if there is an issue retrieving the data
     const listName = `${param}List`;

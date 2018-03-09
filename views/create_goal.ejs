@@ -1,0 +1,42 @@
+<% include head %>
+
+<h1>Create Goal</h1>
+
+<form method="post" action="/create_goal">
+    <table>
+        <tr>
+            <td>
+                <label>Name:</label>
+            </td>
+            <td>
+                <input type="text" name="name">
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <label>Recipient:</label>
+            </td>
+            <td>
+                <select name="invest_id">
+                    <option value="">Choose...</option>
+                    <% if (tables && tables.invest) { Object.keys(tables.invest).forEach(function(id, invest_index) { %>
+                    <option value="<%- id %>"><%- tables.invest[id].name %></option>
+                    <% });} %>
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <label>Amount:</label>
+            </td>
+            <td>
+                <input type="number" name="amount">
+            </td>
+        </tr>
+        <tr>
+            <td align="right" colspan="2"><input type="submit" value="Create Goal"></td>
+        </tr>
+    </table>
+</form>
+
+<% include foot %>

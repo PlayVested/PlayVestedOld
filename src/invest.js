@@ -10,18 +10,18 @@ function authenticateInvestment(req, res, next) {
 function registerInvestmentEndpoints(app) {
     // hitting this endpoint with a specific ID will replace the investment data stored in the session
     app.get('/invest/:id', (req, res, next) => {
-        const sql =
-            `SELECT ` +
-                `invest.id, invest.name, permission.is_admin ` +
-            `FROM ` +
-                `invest ` +
-            `JOIN ` +
-                `permission ` +
-            `ON ` +
-                `permission.invest_id = invest.id ` +
-            `WHERE ` +
-                `permission.user_id = '${req.session.user.id}' AND ` +
-                `invest.id = '${req.params.id}'`;
+        const sql = `
+            SELECT
+                invest.id, invest.name, permission.is_admin
+            FROM
+                invest
+            JOIN
+                permission
+            ON
+                permission.invest_id = invest.id
+            WHERE
+                permission.user_id = '${req.session.user.id}' AND
+                invest.id = '${req.params.id}'`;
         runQuery(sql).then(
             (investResults) => {
                 if (investResults instanceof Array && investResults.length === 1) {

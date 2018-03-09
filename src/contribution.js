@@ -46,17 +46,17 @@ function registerContributionEndpoints(app) {
             amount: req.body.amount,
         };
 
-        const sql = 
-            `INSERT INTO ` +
-            `   contribution (id, user_id, game_id, invest_id, timestamp, amount) `+
-            `VALUES ( ` +
-            `   '${contribution.id}', ` +
-            `   '${contribution.user_id}', ` +
-            `   '${contribution.game_id}', ` +
-            `   '${contribution.invest_id}', ` +
-            `   CURRENT_TIMESTAMP, ` +
-            `   '${contribution.amount}' ` +
-            `)`;
+        const sql = `
+            INSERT INTO
+               contribution (id, user_id, game_id, invest_id, timestamp, amount)
+            VALUES (
+               '${contribution.id}',
+               '${contribution.user_id}',
+               '${contribution.game_id}',
+               '${contribution.invest_id}',
+               CURRENT_TIMESTAMP,
+               '${contribution.amount}'
+            )`;
         runQuery(sql).then(
             (createResults) => {
                 refreshContributionCache(req, res);

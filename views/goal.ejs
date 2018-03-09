@@ -1,0 +1,75 @@
+<% include head %>
+
+<h1>Goal Info</h1>
+
+Goal data for <%- goal.name %>:
+<p>
+    <table>
+        <tr>
+            <td>
+                Name:
+            </td>
+            <td>
+                <%- goal.name %>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                Amount:
+            </td>
+            <td>
+                <%- goal.amount %>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                Created:
+            </td>
+            <td>
+                <%- goal.start_date %>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                Ends:
+            </td>
+            <td>
+                <%- goal.end_date %>
+            </td>
+        </tr>
+    </table>
+</p>
+<p>
+    <table>
+        <tr>
+            <td>Member</td>
+            <td>Contribution</td>
+        </tr>
+        <%
+            if (goal && goal.members && goal.members.length > 0) {
+                goal.members.forEach(function(m, m_index) {
+        %>
+        <tr>
+            <td>
+                <a href="/add_friend"><%- m.name %></a>
+            </td>
+            <td>
+                <%- m.contribution %>
+            </td>
+        </tr>
+        <%
+                }); // goal.tier.forEach()
+            } // if (goal.tier.length)
+        %>
+    </table>
+
+    <form method="post" action="/tier">
+        <% if (goal && goal.id && user && user.id) { %>
+        <input type="hidden" value="<%- goal.id %>" name="goal_id">
+        <input type="hidden" value="<%- user.id %>" name="user_id">
+        <input type="submit" value="Join">
+        <% } %>
+    </form>
+</p>
+
+<% include foot %>

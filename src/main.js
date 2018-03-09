@@ -49,6 +49,7 @@ app.use((req, res, next) => {
     clearStatusMessages();
 
     res.locals.game = req.session.game;
+    res.locals.goal = req.session.goal;
     res.locals.invest = req.session.invest;
     res.locals.tables = req.session.tables;
     res.locals.user = req.session.user;
@@ -88,6 +89,7 @@ app.get('/testing', (req, res) => {
 registerContributionEndpoints(app);
 registerElectionEndpoints(app);
 registerGameEndpoints(app);
+registerGoalEndpoints(app);
 registerInvestmentEndpoints(app);
 registerLoginEndpoints(app);
 registerSupportEndpoints(app);
