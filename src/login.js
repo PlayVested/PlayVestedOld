@@ -30,8 +30,8 @@ function authenticate(name, pass, fn) {
     );
 }
 
-function cacheTable(req, tableName) {
-    return runQuery(`SELECT * FROM ${tableName}`).then(
+function cacheTable(req, tableName, custom_clause = '') {
+    return runQuery(`SELECT * FROM ${tableName} ${custom_clause}`).then(
         (tableResults) => {
             req.session.tables = req.session.tables || {};
             req.session.tables[tableName] = {};
@@ -69,6 +69,31 @@ function cacheUserList(user, param) {
         },
         defaultErrorHandler
     );
+}
+
+function cacheUserGoals(user) {
+    if (!user) {
+        throw new Error('user is required to be valid');
+    }
+
+    const sql = `
+        SELECT
+            goal.name,
+            goal.amount,
+            goal.finish_date
+        FROM
+            goal
+        JOIN
+            connection ON goal.id = connection.connection_id
+        WHERE
+            connection.user_id = '${user.id}'`;
+        runQuery(sql).then(
+            (results) => {
+                user['goals'] = results;
+                console.log(`user: ${user}`);
+            },
+            defaultErrorHandler
+        );
 }
 
 function registerLoginEndpoints(app) {
@@ -112,6 +137,8 @@ function registerLoginEndpoints(app) {
                     promises.push(cacheUserList(user, 'game'));
                     promises.push(cacheTable(req, 'invest'));
                     promises.push(cacheTable(req, 'game'));
+                    promises.push(cacheUserGoals(user));
+                    promises.push(cacheTable(req, 'goal', `WHERE private = '0'`));
                     promises.push(refreshContributionCache(req));
 
                     Promise.all(promises).then(

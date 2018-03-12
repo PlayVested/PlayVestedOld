@@ -1,0 +1,25 @@
+<% include head %>
+
+<div align="center">
+    <h1>Goals</h1>
+</div>
+
+<table><tr><td align="left">
+    <table>
+    <%
+        if (tables && tables.goal) {
+            Object.keys(tables.goal).forEach(function(id, index) {
+    %>
+        <tr style="background-color:ghostwhite">
+            <td>
+                <a href="/goal/<%- id %>"><%- tables.goal[id].name %></a>
+            </td>
+        </tr>
+    <%
+            }); // forEach(goal)
+        } // if (goal)
+    %>
+    </table>
+</td></tr></table>
+
+<% include foot %>

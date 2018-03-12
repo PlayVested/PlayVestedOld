@@ -63,6 +63,35 @@
     </table>
     <%
         } // if (user.contribution)
+
+        if (user && user.goals) {
+    %>
+    <table>
+        <th colspan="2" align="left">
+            <h3>Goals:</h3>
+        </th>
+        <%
+            user.goals.forEach(function(g, index) {
+        %>
+        <tr style="background-color:ghostwhite">
+            <td>
+                <%- g.name %>
+            </td>
+            <td>
+                $<%- g.amount %>
+            </td>
+            <% if (g.finish_date) { %>
+            <td>
+                Complete!
+            </td>
+            <% } %>
+        </tr>
+        <%
+            }); // forEach(goals)
+        %>
+    </table>
+    <%
+        } // if (user.goals)
     %>
 </td></tr></table>
 

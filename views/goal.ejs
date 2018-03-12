@@ -2,7 +2,6 @@
 
 <h1>Goal Info</h1>
 
-Goal data for <%- goal.name %>:
 <p>
     <table>
         <tr>
@@ -18,7 +17,7 @@ Goal data for <%- goal.name %>:
                 Amount:
             </td>
             <td>
-                <%- goal.amount %>
+                $<%- goal.amount %>
             </td>
         </tr>
         <tr>
@@ -26,27 +25,31 @@ Goal data for <%- goal.name %>:
                 Created:
             </td>
             <td>
-                <%- goal.start_date %>
+                <%- goal.create_date %>
             </td>
         </tr>
+        <% if (goal.finish_date) { %>
         <tr>
             <td>
                 Ends:
             </td>
             <td>
-                <%- goal.end_date %>
+                <%- goal.finish_date %>
             </td>
         </tr>
+        <% } %>
     </table>
 </p>
 <p>
     <table>
+        <%
+            if (goal && goal.members && goal.members.length > 0) {
+        %>
         <tr>
             <td>Member</td>
             <td>Contribution</td>
         </tr>
         <%
-            if (goal && goal.members && goal.members.length > 0) {
                 goal.members.forEach(function(m, m_index) {
         %>
         <tr>
@@ -63,10 +66,10 @@ Goal data for <%- goal.name %>:
         %>
     </table>
 
-    <form method="post" action="/tier">
+    <form method="post" action="/join_goal">
         <% if (goal && goal.id && user && user.id) { %>
-        <input type="hidden" value="<%- goal.id %>" name="goal_id">
         <input type="hidden" value="<%- user.id %>" name="user_id">
+        <input type="hidden" value="<%- goal.id %>" name="goal_id">
         <input type="submit" value="Join">
         <% } %>
     </form>

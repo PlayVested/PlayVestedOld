@@ -12,12 +12,16 @@ function displayResults(name, result, prefix = '') {
     }
 }
 
-function defaultErrorHandler(err) {
+function defaultErrorHandler(err, res) {
     if (!module.parent) {
         console.warn(`defaultErrorHandler: ${typeof err} ${err.message}`);
     }
-    throw err;
-    res.redirect('/');
+
+    if (res) {
+        res.status(500).render('error', {error: err});
+    } else {
+        throw err;
+    }
 }
 
 // wrapper function for talking with the database to do an SQL query
