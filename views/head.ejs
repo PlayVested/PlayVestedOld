@@ -70,44 +70,46 @@
                                 <a href="/settings">Settings</a>
                             </td>
                         </tr>
+                        <%
+                            var section = [
+                                {
+                                    displayName: 'Investment',
+                                    tableName: 'invest',
+                                },
+                                {
+                                    displayName: 'Game',
+                                    tableName: 'game',
+                                },
+                                {
+                                    displayName: 'Goal',
+                                    tableName: 'goal',
+                                },
+                            ];
+                            section.forEach(function(sec, i) {
+                        %>
                         <tr>
                             <td>
-                                <h2>Manage Investments:</h2>
+                                <h2>Manage <%- sec.displayName %>s:</h2>
                                 <ul>
                                 <%
-                                    if (user && user.investList && user.investList.length > 0) {
-                                        user.investList.forEach(function(inst, index) {
+                                    const listName = sec.tableName + 'List';
+                                    if (user && user[listName] && user[listName].length > 0) {
+                                        user[listName].forEach(function(inst, index) {
                                 %>
-                                    <li><a href="/invest/<%- inst.id %>"><%- inst.name %></a></li>
+                                    <li><a href="/<%- sec.tableName %>/<%- inst.id %>"><%- inst.name %></a></li>
                                 <%
-                                        }); // user.investList.forEach()
-                                    } // if (user.investList.length)
+                                        }); // user[listName].forEach()
+                                    } // if (user[listName].length)
                                 %>
                                 </ul>
                                 <div>
-                                    <a href="/create_invest">Create Investment</a>
+                                    <a href="/create_<%- sec.tableName %>">Create <%- sec.displayName %></a>
                                 </div>
                             </td>
                         </tr>
-                        <tr>
-                            <td>
-                                <h2>Manage Games:</h2>
-                                <ul>
-                                <%
-                                    if (user && user.gameList && user.gameList.length > 0) {
-                                        user.gameList.forEach(function(inst, index) {
-                                %>
-                                    <li><a href="/game/<%- inst.id %>"><%- inst.name %></a></li>
-                                <%
-                                        }); // user.gameList.forEach()
-                                    } // if (user.gameList.length)
-                                %>
-                                </ul>
-                                <div>
-                                    <a href="/create_game">Create Game</a>
-                                </div>
-                            </td>
-                        </tr>
+                        <%
+                            }); // forEach(section)
+                        %>
                     </table>
                     <% } %>
                 </td>

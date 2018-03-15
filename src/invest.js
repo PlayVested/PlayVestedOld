@@ -18,7 +18,7 @@ function registerInvestmentEndpoints(app) {
             JOIN
                 permission
             ON
-                permission.invest_id = invest.id
+                permission.other_id = invest.id
             WHERE
                 permission.user_id = '${req.session.user.id}' AND
                 invest.id = '${req.params.id}'`;
@@ -47,7 +47,7 @@ function registerInvestmentEndpoints(app) {
         runQuery(`UPDATE invest SET name = '${req.body.name}' WHERE id = '${req.body.id}'`).then(
             (updateResults) => {
                 // update the list of investments stored in the session
-                cacheUserList(req.session.user, 'invest').then(
+                cacheUserPermissions(req.session.user, 'invest').then(
                     (cacheResult) => {
                         reportSuccess(res, `Updated ${req.body.name}`);
                         res.redirect(`/invest/${req.body.id}`);
@@ -100,13 +100,13 @@ function registerInvestmentEndpoints(app) {
 
                 // wait for all DB entries to be made before moving on to the next page
                 promises.push(runQuery(`INSERT INTO invest (id, name) VALUES ('${invest.id}', '${invest.name}')`));
-                promises.push(runQuery(`INSERT INTO permission (id, user_id, invest_id, is_admin) VALUES ('${uuidv4()}', '${req.session.user.id}', '${invest.id}', '1')`));
+                promises.push(runQuery(`INSERT INTO permission (id, user_id, other_id, is_admin) VALUES ('${uuidv4()}', '${req.session.user.id}', '${invest.id}', '1')`));
                 Promise.all(promises).then(
                     (allResults) => {
                         // update the list of investments stored in the session
                         promises = [];
                         promises.push(cacheTable(req, 'invest'));
-                        promises.push(cacheUserList(req.session.user, 'invest'));
+                        promises.push(cacheUserPermissions(req.session.user, 'invest'));
                         Promise.all(promises).then(
                             (cacheResult) => {
                                 // let them know it worked
@@ -123,7 +123,7 @@ function registerInvestmentEndpoints(app) {
                         // if either fails, delete them both
                         promises = [];
                         promises.push(runQuery(`DELETE FROM invest WHERE id = '${invest.id}'`));
-                        promises.push(runQuery(`DELETE FROM permission WHERE user_id = '${req.session.user.id}' AND invest_id = '${invest.id}'`));
+                        promises.push(runQuery(`DELETE FROM permission WHERE user_id = '${req.session.user.id}' AND other_id = '${invest.id}'`));
                         Promise.all(promises).then(
                             defaultErrorHandler,
                             defaultErrorHandler

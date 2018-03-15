@@ -18,7 +18,7 @@ function registerGameEndpoints(app) {
             JOIN
                 permission
             ON
-                permission.game_id = game.id
+                permission.other_id = game.id
             WHERE
                 permission.user_id = '${req.session.user.id}' AND
                 game.id = '${req.params.id}'`;
@@ -54,7 +54,7 @@ function registerGameEndpoints(app) {
         runQuery(`UPDATE game SET name = '${req.body.name}', decay_rate = '${req.body.decay_rate}' WHERE id = '${req.body.id}'`).then(
             (updateResults) => {
                 // update the list of games stored in the session
-                cacheUserList(req.session.user, 'game').then(
+                cacheUserPermissions(req.session.user, 'game').then(
                     (cacheResult) => {
                         reportSuccess(res, `Updated ${req.body.name}`);
                         res.redirect(`/game/${req.body.id}`);
@@ -103,13 +103,13 @@ function registerGameEndpoints(app) {
 
                 // wait for all DB entries to be made before moving on to the next page
                 promises.push(runQuery(`INSERT INTO game (id, name, decay_rate) VALUES ('${game.id}', '${game.name}', '${game.decay_rate}')`));
-                promises.push(runQuery(`INSERT INTO permission (id, user_id, game_id, is_admin) VALUES ('${uuidv4()}', '${req.session.user.id}', '${game.id}', '1')`));
+                promises.push(runQuery(`INSERT INTO permission (id, user_id, other_id, is_admin) VALUES ('${uuidv4()}', '${req.session.user.id}', '${game.id}', '1')`));
                 Promise.all(promises).then(
                     (allResults) => {
                         // update the list of games stored in the session
                         promises = [];
                         promises.push(cacheTable(req, 'game'));
-                        promises.push(cacheUserList(req.session.user, 'game'));
+                        promises.push(cacheUserPermissions(req.session.user, 'game'));
                         Promise.all(promises).then(
                             (cacheResult) => {
                                 // let them know it worked
@@ -126,7 +126,7 @@ function registerGameEndpoints(app) {
                         // if either fails, delete them both
                         promises = [];
                         promises.push(runQuery(`DELETE FROM game WHERE id = '${game.id}'`));
-                        promises.push(runQuery(`DELETE FROM permission WHERE user_id = '${req.session.user.id}' AND game_id = '${game.id}'`));
+                        promises.push(runQuery(`DELETE FROM permission WHERE user_id = '${req.session.user.id}' AND other_id = '${game.id}'`));
                         Promise.all(promises).then(
                             defaultErrorHandler,
                             defaultErrorHandler

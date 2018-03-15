@@ -31,7 +31,7 @@ function authenticate(name, pass, fn) {
 }
 
 function cacheTable(req, tableName, custom_clause = '') {
-    return runQuery(`SELECT * FROM ${tableName} ${custom_clause}`).then(
+    return runQuery(`SELECT ${tableName}.* FROM ${tableName} ${custom_clause}`).then(
         (tableResults) => {
             req.session.tables = req.session.tables || {};
             req.session.tables[tableName] = {};
@@ -43,7 +43,7 @@ function cacheTable(req, tableName, custom_clause = '') {
     );
 }
 
-function cacheUserList(user, param) {
+function cacheUserPermissions(user, param) {
     if (!user) {
         throw new Error('user is required to be valid');
     }
@@ -56,7 +56,7 @@ function cacheUserList(user, param) {
         JOIN
             permission
         ON
-            permission.${param}_id = ${param}.id
+            permission.other_id = ${param}.id
         WHERE
             permission.user_id = '${user.id}'`;
 
@@ -133,12 +133,13 @@ function registerLoginEndpoints(app) {
 
                     // pull info about which games/investments the user has rights to create/modify
                     var promises = [];
-                    promises.push(cacheUserList(user, 'invest'));
-                    promises.push(cacheUserList(user, 'game'));
+                    promises.push(cacheUserPermissions(user, 'invest'));
+                    promises.push(cacheUserPermissions(user, 'game'));
+                    promises.push(cacheUserPermissions(user, 'goal'));
                     promises.push(cacheTable(req, 'invest'));
                     promises.push(cacheTable(req, 'game'));
                     promises.push(cacheUserGoals(user));
-                    promises.push(cacheTable(req, 'goal', `WHERE private = '0'`));
+                    promises.push(cacheTable(req, 'goal', `JOIN permission ON (permission.other_id = goal.id AND (goal.private = '0' OR permission.user_id = '${user.id}'))`));
                     promises.push(refreshContributionCache(req));
 
                     Promise.all(promises).then(

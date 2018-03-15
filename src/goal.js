@@ -62,7 +62,7 @@ function registerGoalEndpoints(app) {
         runQuery(sql).then(
             (updateResults) => {
                 // update the list of goals stored in the session
-                cacheUserList(req.session.user, 'goal').then(
+                cacheUserPermissions(req.session.user, 'goal').then(
                     (cacheResult) => {
                         reportSuccess(res, `Updated ${req.body.name}`);
                         res.redirect(`/goal/${req.body.id}`);
@@ -115,7 +115,7 @@ function registerGoalEndpoints(app) {
                 };
 
                 // wait for all DB entries to be made before moving on to the next page
-                const sql = `
+                const goal_sql = `
                     INSERT INTO goal (
                         id,
                         owner_id,
@@ -135,10 +135,29 @@ function registerGoalEndpoints(app) {
                         '${goal.zip_code}',
                         '${goal.private}'
                     )`;
-                runQuery(sql).then(
+                const permission_sql = `
+                    INSERT INTO permission (
+                        id,
+                        user_id,
+                        other_id,
+                        is_admin
+                    ) VALUES (
+                        '${uuidv4()}',
+                        '${req.session.user.id}',
+                        '${goal.id}',
+                        '1'
+                    )`;
+
+                var promises = [];
+                promises.push(runQuery(goal_sql));
+                promises.push(runQuery(permission_sql));
+                Promise.all(promises).then(
                     (allResults) => {
                         // update the list of goals stored in the session
-                        cacheTable(req, 'goal', `WHERE private = '0'`).then(
+                        promises = [];
+                        promises.push(cacheTable(req, 'goal', `JOIN permission ON (permission.other_id = goal.id AND (goal.private = '0' OR permission.user_id = '${goal.owner_id}'))`));
+                        promises.push(cacheUserPermissions(req.session.user, 'game'));
+                        Promise.all(promises).then(
                             (cacheResult) => {
                                 // let them know it worked
                                 reportSuccess(res, `Successfully created goal ${goalName}`);
@@ -154,7 +173,10 @@ function registerGoalEndpoints(app) {
                         reportError(res, `Error creating goal: ${err}`);
 
                         // if either fails, delete them both
-                        runQuery(`DELETE FROM goal WHERE id = '${goal.id}'`).then(
+                        promises = [];
+                        promises.push(runQuery(`DELETE FROM goal WHERE id = '${goal.id}'`));
+                        promises.push(runQuery(`DELETE FROM permission WHERE user_id = '${req.session.user.id}' AND other_id = '${goal.id}'`));
+                        Promise.all(promises).then(
                             (result) => {
                                 console.log(`successfully deleted goal: ${result}`)
                                 res.redirect('back');
