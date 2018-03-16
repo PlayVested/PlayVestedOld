@@ -215,7 +215,7 @@ function registerGoalEndpoints(app) {
                 runQuery(join_sql).then(
                     (response) => {
                         reportSuccess(res, 'Successfully joined goal');
-                        cacheUserGoals(user);
+                        cacheUserGoals(req.session.user);
                         res.redirect('find_goals');
                     }
                 ).catch((error) => {
@@ -248,7 +248,7 @@ function registerGoalEndpoints(app) {
                 runQuery(join_sql).then(
                     (response) => {
                         reportSuccess('Successfully left goal');
-                        cacheUserGoals(user);
+                        cacheUserGoals(req.session.user);
                         res.redirect('user');
                     }
                 ).catch((error) => {

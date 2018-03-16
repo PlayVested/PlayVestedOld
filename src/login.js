@@ -76,19 +76,29 @@ function cacheUserGoals(user) {
         throw new Error('user is required to be valid');
     }
 
-    const sql = `
+    const selectSQL = `
         SELECT
             goal.name,
             goal.amount,
             goal.finish_date
         FROM
             goal
+        `;
+
+    const sql = 
+        selectSQL + `
         JOIN
-            connection ON goal.id = connection.connection_id
-        WHERE
-            connection.user_id = '${user.id}'`;
+            connection ON goal.id = connection.connection_id AND
+            connection.user_id = '${user.id}'
+        UNION` +
+        selectSQL + `
+        JOIN
+            permission ON goal.id = permission.other_id AND
+            permission.user_id = '${user.id}' AND
+            permission.is_admin = 1`;
         runQuery(sql).then(
             (results) => {
+                console.log(`found ${results.length} goals`);
                 user['goals'] = results;
                 console.log(`user: ${user}`);
             },
