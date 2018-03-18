@@ -106,7 +106,6 @@ function registerGoalEndpoints(app) {
 
                 const goal = {
                     id: uuidv4(),
-                    owner_id: req.session.user.id,
                     invest_id: req.body.invest_id,
                     amount: req.body.amount,
                     name: goalName,
@@ -118,7 +117,6 @@ function registerGoalEndpoints(app) {
                 const goal_sql = `
                     INSERT INTO goal (
                         id,
-                        owner_id,
                         invest_id,
                         amount,
                         name,
@@ -127,7 +125,6 @@ function registerGoalEndpoints(app) {
                         private
                     ) VALUES (
                         '${goal.id}',
-                        '${goal.owner_id}',
                         '${goal.invest_id}',
                         '${goal.amount}',
                         '${goal.name}',
@@ -155,7 +152,7 @@ function registerGoalEndpoints(app) {
                     (allResults) => {
                         // update the list of goals stored in the session
                         promises = [];
-                        promises.push(cacheTable(req, 'goal', `JOIN permission ON (permission.other_id = goal.id AND (goal.private = '0' OR permission.user_id = '${goal.owner_id}'))`));
+                        promises.push(cacheTable(req, 'goal', `JOIN permission ON (permission.other_id = goal.id AND (goal.private = '0' OR permission.user_id = '${req.session.user.id}'))`));
                         promises.push(cacheUserPermissions(req.session.user, 'game'));
                         Promise.all(promises).then(
                             (cacheResult) => {
