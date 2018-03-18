@@ -116,6 +116,7 @@ function registerUserEndpoints(app) {
                         name = '${req.body.username}',
                         display_name = '${req.body.display_name}',
                         email = '${req.body.email}',
+                        zip_code = '${req.body.zip_code}',
                         password = '${ret_pass}',
                         salt = '${salt}',
                         hash = '${hash}'
@@ -126,6 +127,7 @@ function registerUserEndpoints(app) {
                             req.session.user.name = req.body.username;
                             req.session.user.display_name = req.body.display_name;
                             req.session.user.email = req.body.email;
+                            req.session.user.zip_code = req.body.zip_code;
                             req.session.user.password = ret_pass;
                             req.session.user.salt = salt;
                             req.session.user.hash = hash;
