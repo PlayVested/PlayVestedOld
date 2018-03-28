@@ -1,8 +1,11 @@
+const DBUtils = require('./DBUtils');
+const uuidv4 = require('uuid/v4');
+
 function authenticateContribution(req, res, next) {
     if (req.session.user) {
         next();
     } else {
-        reportError(res, 'Manipulating contribution data requires an active user!');
+        DBUtils.reportError(res, 'Manipulating contribution data requires an active user!');
         res.redirect('/');
     }
 }
@@ -16,14 +19,14 @@ function refreshContributionCache(req, res) {
         return Promise.resolve([]);
     }
 
-    return runQuery(`SELECT game_id, invest_id, timestamp, SUM(amount) AS amount FROM contribution WHERE user_id = '${req.session.user.id}' GROUP BY invest_id, game_id ORDER BY amount DESC`).then(
+    return DBUtils.runQuery(`SELECT game_id, invest_id, timestamp, SUM(amount) AS amount FROM contribution WHERE user_id = '${req.session.user.id}' GROUP BY invest_id, game_id ORDER BY amount DESC`).then(
         (contributionResults) => {
             req.session.user.contribution = contributionResults;
             if (res) {
                 res.redirect('/user');
             }
         },
-        defaultErrorHandler
+        DBUtils.defaultErrorHandler
     );
 }
 
@@ -57,11 +60,11 @@ function registerContributionEndpoints(app) {
                CURRENT_TIMESTAMP,
                '${contribution.amount}'
             )`;
-        runQuery(sql).then(
+        DBUtils.runQuery(sql).then(
             (createResults) => {
                 refreshContributionCache(req, res);
             },
-            defaultErrorHandler
+            DBUtils.defaultErrorHandler
         );
     });
 
@@ -69,20 +72,25 @@ function registerContributionEndpoints(app) {
     // correct RESTful way is to use 'delete' as a verb, but HTML links can't do that, so I'm cheating for now
     // remove the second version once the front end is in better shape
     app.delete('/contribution/:id', authenticateContribution, (req, res) => {
-        runQuery(`DELETE FROM contribution WHERE id = '${req.params.id}'`).then(
+        DBUtils.runQuery(`DELETE FROM contribution WHERE id = '${req.params.id}'`).then(
             (deleteResults) => {
                 res.redirect('/contribution');
             },
-            defaultErrorHandler
+            DBUtils.defaultErrorHandler
         );
     });
 
     app.get('/delete_contribution/:id', authenticateContribution, (req, res) => {
-        runQuery(`DELETE FROM contribution WHERE id = '${req.params.id}'`).then(
+        DBUtils.runQuery(`DELETE FROM contribution WHERE id = '${req.params.id}'`).then(
             (deleteResults) => {
                 res.redirect('/contribution');
             },
-            defaultErrorHandler
+            DBUtils.defaultErrorHandler
         );
     });
 }
+
+module.exports = {
+    registerEndpoints: registerContributionEndpoints,
+    refreshContributionCache: refreshContributionCache
+};

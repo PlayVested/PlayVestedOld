@@ -1,8 +1,11 @@
+const DBUtils = require('./DBUtils');
+const uuidv4 = require('uuid/v4');
+
 function authenticateGoal(req, res, next) {
     if (req.session.user && req.session.goal) {
         next();
     } else {
-        reportError(res, 'Access denied!');
+        DBUtils.reportError(res, 'Access denied!');
         res.redirect('/');
     }
 }
@@ -17,7 +20,7 @@ function registerGoalEndpoints(app) {
                 goal
             WHERE
                 goal.id = '${req.params.id}'`;
-        runQuery(sql).then(
+        DBUtils.runQuery(sql).then(
             (goalResults) => {
                 if (goalResults instanceof Array && goalResults.length === 1) {
                     // store the goal in the session
@@ -29,12 +32,12 @@ function registerGoalEndpoints(app) {
                     // now render the goal info
                     res.redirect('/goal');
                 } else {
-                    reportError(res, 'Failed to find goal, please try again');
+                    DBUtils.reportError(res, 'Failed to find goal, please try again');
                     res.redirect('/');
                 }
             }
         ).catch((error) => {
-            defaultErrorHandler(error, res);
+            DBUtils.defaultErrorHandler(error, res);
         });
     });
 
@@ -45,7 +48,7 @@ function registerGoalEndpoints(app) {
 
     app.post('/goal', authenticateGoal, (req, res) => {
         if (req.body.goal_id !== req.session.goal.id) {
-            reportError(res, `Request to update goal doesn't match active goal`);
+            DBUtils.reportError(res, `Request to update goal doesn't match active goal`);
             req.redirect('back');
             return;
         }
@@ -59,20 +62,20 @@ function registerGoalEndpoints(app) {
                 private = '${req.body.visibility === 'Private' ? 1 : 0}'
             WHERE id =
                 ${req.body.id}'`;
-        runQuery(sql).then(
+        DBUtils.runQuery(sql).then(
             (updateResults) => {
                 // update the list of goals stored in the session
                 cacheUserPermissions(req.session.user, 'goal').then(
                     (cacheResult) => {
-                        reportSuccess(res, `Updated ${req.body.name}`);
+                        DBUtils.reportSuccess(res, `Updated ${req.body.name}`);
                         res.redirect(`/goal/${req.body.id}`);
                     }
                 ).catch((error) => {
-                    defaultErrorHandler(error, res);
+                    DBUtils.defaultErrorHandler(error, res);
                 });
             }
         ).catch((error) => {
-            defaultErrorHandler(error, res);
+            DBUtils.defaultErrorHandler(error, res);
         });
     });
 
@@ -88,18 +91,18 @@ function registerGoalEndpoints(app) {
     
         // validate the inputs
         if (!goalName) {
-            reportError(res, 'Invalid name');
+            DBUtils.reportError(res, 'Invalid name');
             res.redirect('back');
             return;
         }
 
         // check if the goal name is already in use
-        runQuery(`SELECT * FROM goal WHERE name = '${goalName}'`).then(
+        DBUtils.runQuery(`SELECT * FROM goal WHERE name = '${goalName}'`).then(
             (goalResults) => {
-                clearStatusMessages();
+                DBUtils.clearStatusMessages();
 
                 if (goalResults && goalResults.length > 0) {
-                    reportError(res, 'Name already taken');
+                    DBUtils.reportError(res, 'Name already taken');
                     res.redirect('back');
                     return;
                 }
@@ -146,8 +149,8 @@ function registerGoalEndpoints(app) {
                     )`;
 
                 var promises = [];
-                promises.push(runQuery(goal_sql));
-                promises.push(runQuery(permission_sql));
+                promises.push(DBUtils.runQuery(goal_sql));
+                promises.push(DBUtils.runQuery(permission_sql));
                 Promise.all(promises).then(
                     (allResults) => {
                         // update the list of goals stored in the session
@@ -157,35 +160,35 @@ function registerGoalEndpoints(app) {
                         Promise.all(promises).then(
                             (cacheResult) => {
                                 // let them know it worked
-                                reportSuccess(res, `Successfully created goal ${goalName}`);
+                                DBUtils.reportSuccess(res, `Successfully created goal ${goalName}`);
 
                                 // send them to the goal page so they can join the group immediately
                                 res.redirect(`/goal/${goal.id}`);
                             }
                         ).catch((error) => {
-                            defaultErrorHandler(error, res);
+                            DBUtils.defaultErrorHandler(error, res);
                         });
                     },
                     (err) => {
-                        reportError(res, `Error creating goal: ${err}`);
+                        DBUtils.reportError(res, `Error creating goal: ${err}`);
 
                         // if either fails, delete them both
                         promises = [];
-                        promises.push(runQuery(`DELETE FROM goal WHERE id = '${goal.id}'`));
-                        promises.push(runQuery(`DELETE FROM permission WHERE user_id = '${req.session.user.id}' AND other_id = '${goal.id}'`));
+                        promises.push(DBUtils.runQuery(`DELETE FROM goal WHERE id = '${goal.id}'`));
+                        promises.push(DBUtils.runQuery(`DELETE FROM permission WHERE user_id = '${req.session.user.id}' AND other_id = '${goal.id}'`));
                         Promise.all(promises).then(
                             (result) => {
                                 console.log(`successfully deleted goal: ${result}`)
                                 res.redirect('back');
                             }
                         ).catch((error) => {
-                            defaultErrorHandler(error, res);
+                            DBUtils.defaultErrorHandler(error, res);
                         });
                     }
                 );
             }
         ).catch((error) => {
-            defaultErrorHandler(error, res);
+            DBUtils.defaultErrorHandler(error, res);
         });
     });
 
@@ -198,7 +201,7 @@ function registerGoalEndpoints(app) {
             SELECT * from goal
             WHERE id = '${req.body.goal_id}'`;
 
-        const promises = [runQuery(user_sql), runQuery(goal_sql)];
+        const promises = [DBUtils.runQuery(user_sql), DBUtils.runQuery(goal_sql)];
         Promise.all(promises).then(
             (allResults) => {
                 const join_sql = `
@@ -209,18 +212,18 @@ function registerGoalEndpoints(app) {
                         '${req.body.user_id}',
                         '${req.body.goal_id}'
                     )`;
-                runQuery(join_sql).then(
+                DBUtils.runQuery(join_sql).then(
                     (response) => {
-                        reportSuccess(res, 'Successfully joined goal');
+                        DBUtils.reportSuccess(res, 'Successfully joined goal');
                         cacheUserGoals(req.session.user);
                         res.redirect('find_goals');
                     }
                 ).catch((error) => {
-                    defaultErrorHandler(error, res);
+                    DBUtils.defaultErrorHandler(error, res);
                 });
             }
         ).catch((error) => {
-            defaultErrorHandler(error, res);
+            DBUtils.defaultErrorHandler(error, res);
         });
     });
 
@@ -233,7 +236,7 @@ function registerGoalEndpoints(app) {
             SELECT * from goal
             WHERE id = '${req.body.goal_id}'`;
 
-        const promises = [runQuery(user_sql), runQuery(goal_sql)];
+        const promises = [DBUtils.runQuery(user_sql), DBUtils.runQuery(goal_sql)];
         Promise.all(promises).then(
             (allResults) => {
                 const join_sql = `
@@ -242,18 +245,18 @@ function registerGoalEndpoints(app) {
                     WHERE
                         user_id = '${req.body.user_id}' AND
                         connection_id = '${req.body.goal_id}'`;
-                runQuery(join_sql).then(
+                DBUtils.runQuery(join_sql).then(
                     (response) => {
-                        reportSuccess('Successfully left goal');
+                        DBUtils.reportSuccess('Successfully left goal');
                         cacheUserGoals(req.session.user);
                         res.redirect('user');
                     }
                 ).catch((error) => {
-                    defaultErrorHandler(error, res);
+                    DBUtils.defaultErrorHandler(error, res);
                 });
             }
         ).catch((error) => {
-            defaultErrorHandler(error, res);
+            DBUtils.defaultErrorHandler(error, res);
         });
     });
 
@@ -262,3 +265,7 @@ function registerGoalEndpoints(app) {
         res.render('find_goals');
     });
 }
+
+module.exports = {
+    registerEndpoints: registerGoalEndpoints
+};

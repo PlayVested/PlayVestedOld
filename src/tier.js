@@ -1,8 +1,11 @@
+const DBUtils = require('./DBUtils');
+const uuidv4 = require('uuid/v4');
+
 function authenticateTier(req, res, next) {
     if (req.session.game) {
         next();
     } else {
-        reportError(res, 'Manipulating tier data requires an active game!');
+        DBUtils.reportError(res, 'Manipulating tier data requires an active game!');
         res.redirect('/game');
     }
 }
@@ -12,12 +15,12 @@ function refreshTierCache(req, res) {
         return;
     }
 
-    runQuery(`SELECT * FROM tier WHERE game_id = '${req.session.game.id}' ORDER BY reward`).then(
+    DBUtils.runQuery(`SELECT * FROM tier WHERE game_id = '${req.session.game.id}' ORDER BY reward`).then(
         (tierResults) => {
             req.session.game.tier = tierResults;
             res.redirect('/game');
         },
-        defaultErrorHandler
+        DBUtils.defaultErrorHandler
     );
 }
 
@@ -28,23 +31,23 @@ function registerTierEndpoints(app) {
     });
 
     app.post('/tier', authenticateTier, (req, res) => {
-        clearStatusMessages();
+        DBUtils.clearStatusMessages();
 
         var updates = [];
         if (req.body.id instanceof Array) {
             for (i in req.body.id) {
-                updates.push(runQuery(`UPDATE tier SET contribution ='${req.body.contribution[i]}', reward ='${req.body.reward[i]}' WHERE id='${req.body.id[i]}'`));
+                updates.push(DBUtils.runQuery(`UPDATE tier SET contribution ='${req.body.contribution[i]}', reward ='${req.body.reward[i]}' WHERE id='${req.body.id[i]}'`));
             }
         } else {
-            updates.push(runQuery(`UPDATE tier SET contribution ='${req.body.contribution}', reward ='${req.body.reward}' WHERE id='${req.body.id}'`));
+            updates.push(DBUtils.runQuery(`UPDATE tier SET contribution ='${req.body.contribution}', reward ='${req.body.reward}' WHERE id='${req.body.id}'`));
         }
 
         Promise.all(updates).then(
             (allResults) => {
-                reportSuccess(res, `Successfully updated tier data`);
+                DBUtils.reportSuccess(res, `Successfully updated tier data`);
                 res.redirect('/tier');
             },
-            defaultErrorHandler
+            DBUtils.defaultErrorHandler
         );
     });
 
@@ -56,11 +59,11 @@ function registerTierEndpoints(app) {
             reward: 0,
         };
 
-        runQuery(`INSERT INTO tier (id, game_id, contribution, reward) VALUES ('${tier.id}', '${tier.game_id}', '${tier.contribution}', '${tier.reward}')`).then(
+        DBUtils.runQuery(`INSERT INTO tier (id, game_id, contribution, reward) VALUES ('${tier.id}', '${tier.game_id}', '${tier.contribution}', '${tier.reward}')`).then(
             (createResults) => {
                 refreshTierCache(req, res);
             },
-            defaultErrorHandler
+            DBUtils.defaultErrorHandler
         );
     });
 
@@ -72,20 +75,24 @@ function registerTierEndpoints(app) {
     // correct RESTful way is to use 'delete' as a verb, but HTML links can't do that, so I'm cheating for now
     // remove the second version once the front end is in better shape
     app.delete('/tier/:id', authenticateTier, (req, res) => {
-        runQuery(`DELETE FROM tier WHERE id = '${req.params.id}'`).then(
+        DBUtils.runQuery(`DELETE FROM tier WHERE id = '${req.params.id}'`).then(
             (deleteResults) => {
                 res.redirect('/tier');
             },
-            defaultErrorHandler
+            DBUtils.defaultErrorHandler
         );
     });
 
     app.get('/delete_tier/:id', authenticateTier, (req, res) => {
-        runQuery(`DELETE FROM tier WHERE id = '${req.params.id}'`).then(
+        DBUtils.runQuery(`DELETE FROM tier WHERE id = '${req.params.id}'`).then(
             (deleteResults) => {
                 res.redirect('/tier');
             },
-            defaultErrorHandler
+            DBUtils.defaultErrorHandler
         );
     });
 }
+
+module.exports = {
+    registerEndpoints: registerTierEndpoints
+};

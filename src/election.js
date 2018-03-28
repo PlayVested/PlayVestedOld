@@ -1,18 +1,21 @@
+const DBUtils = require('./DBUtils');
+const uuidv4 = require('uuid/v4');
+
 function authenticateElection(req, res, next) {
     if (req.session.user) {
         next();
     } else {
-        reportError(res, 'Manipulating election data requires an active user!');
+        DBUtils.reportError(res, 'Manipulating election data requires an active user!');
         res.redirect('/');
     }
 }
 
 function refreshElectionCache(req) {
-    return runQuery(`SELECT * FROM election WHERE user_id = '${req.session.user.id}'`).then(
+    return DBUtils.runQuery(`SELECT * FROM election WHERE user_id = '${req.session.user.id}'`).then(
         (electionResults) => {
             req.session.user.election = electionResults;
         },
-        defaultErrorHandler
+        DBUtils.defaultErrorHandler
     );
 }
 
@@ -23,28 +26,28 @@ function registerElectionEndpoints(app) {
             (results) => {
                 res.render('election');
             },
-            defaultErrorHandler
+            DBUtils.defaultErrorHandler
         );
     });
 
     app.post('/election', authenticateElection, (req, res) => {
-        clearStatusMessages();
+        DBUtils.clearStatusMessages();
 
         var updates = [];
         if (req.body.id instanceof Array) {
             for (i in req.body.id) {
-                updates.push(runQuery(`UPDATE election SET invest_id ='${req.body.invest_id[i]}', percentage ='${req.body.percentage[i]}' WHERE id='${req.body.id[i]}'`));
+                updates.push(DBUtils.runQuery(`UPDATE election SET invest_id ='${req.body.invest_id[i]}', percentage ='${req.body.percentage[i]}' WHERE id='${req.body.id[i]}'`));
             }
         } else {
-            updates.push(runQuery(`UPDATE election SET invest_id ='${req.body.invest_id}', percentage ='${req.body.percentage}' WHERE id='${req.body.id}'`));
+            updates.push(DBUtils.runQuery(`UPDATE election SET invest_id ='${req.body.invest_id}', percentage ='${req.body.percentage}' WHERE id='${req.body.id}'`));
         }
 
         Promise.all(updates).then(
             (allResults) => {
-                reportSuccess(res, `Successfully updated election data`);
+                DBUtils.reportSuccess(res, `Successfully updated election data`);
                 res.redirect('/election');
             },
-            defaultErrorHandler
+            DBUtils.defaultErrorHandler
         );
     });
 
@@ -56,11 +59,11 @@ function registerElectionEndpoints(app) {
             percentage: 0,
         };
 
-        runQuery(`INSERT INTO election (id, user_id, invest_id, percentage) VALUES ('${election.id}', '${election.user_id}', '${election.invest_id}', '${election.percentage}')`).then(
+        DBUtils.runQuery(`INSERT INTO election (id, user_id, invest_id, percentage) VALUES ('${election.id}', '${election.user_id}', '${election.invest_id}', '${election.percentage}')`).then(
             (createResults) => {
                 refreshElectionCache(req, res);
             },
-            defaultErrorHandler
+            DBUtils.defaultErrorHandler
         );
     });
 
@@ -72,20 +75,24 @@ function registerElectionEndpoints(app) {
     // correct RESTful way is to use 'delete' as a verb, but HTML links can't do that, so I'm cheating for now
     // remove the second version once the front end is in better shape
     app.delete('/election/:id', authenticateElection, (req, res) => {
-        runQuery(`DELETE FROM election WHERE id = '${req.params.id}'`).then(
+        DBUtils.runQuery(`DELETE FROM election WHERE id = '${req.params.id}'`).then(
             (deleteResults) => {
                 res.redirect('/election');
             },
-            defaultErrorHandler
+            DBUtils.defaultErrorHandler
         );
     });
 
     app.get('/delete_election/:id', authenticateElection, (req, res) => {
-        runQuery(`DELETE FROM election WHERE id = '${req.params.id}'`).then(
+        DBUtils.runQuery(`DELETE FROM election WHERE id = '${req.params.id}'`).then(
             (deleteResults) => {
                 res.redirect('/election');
             },
-            defaultErrorHandler
+            DBUtils.defaultErrorHandler
         );
     });
 }
+
+module.exports = {
+    registerEndpoints: registerElectionEndpoints
+};

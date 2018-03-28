@@ -1,10 +1,14 @@
+const contributionFuncs = require('./contribution');
+const DBUtils = require('./DBUtils');
+const hash = require('pbkdf2-password')();
+
 // Authenticate using our plain-object database of doom!
 function authenticate(name, pass, fn) {
     if (!module.parent) {
         console.log('authenticating %s: %s', name, pass);
     }
 
-    runQuery(`SELECT * FROM user WHERE name = '${name}'`).then(
+    DBUtils.runQuery(`SELECT * FROM user WHERE name = '${name}'`).then(
         (userResults) => {
             // we expect a single result, anything else is an error
             if (!(userResults instanceof Array) || userResults.length !== 1) {
@@ -26,12 +30,12 @@ function authenticate(name, pass, fn) {
                 }
             });
         },
-        defaultErrorHandler
+        DBUtils.defaultErrorHandler
     );
 }
 
 function cacheTable(req, tableName, custom_clause = '') {
-    return runQuery(`SELECT ${tableName}.* FROM ${tableName} ${custom_clause}`).then(
+    return DBUtils.runQuery(`SELECT ${tableName}.* FROM ${tableName} ${custom_clause}`).then(
         (tableResults) => {
             req.session.tables = req.session.tables || {};
             req.session.tables[tableName] = {};
@@ -39,7 +43,7 @@ function cacheTable(req, tableName, custom_clause = '') {
                 req.session.tables[tableName][inst.id] = inst;
             }
         },
-        defaultErrorHandler
+        DBUtils.defaultErrorHandler
     );
 }
 
@@ -63,11 +67,11 @@ function cacheUserPermissions(user, param) {
     // always clear out the stored value so it doesn't remain stale if there is an issue retrieving the data
     const listName = `${param}List`;
     user[listName] = [];
-    return runQuery(sql).then(
+    return DBUtils.runQuery(sql).then(
         (paramResults) => {
             user[listName] = paramResults;
         },
-        defaultErrorHandler
+        DBUtils.defaultErrorHandler
     );
 }
 
@@ -96,13 +100,13 @@ function cacheUserGoals(user) {
             permission ON goal.id = permission.other_id AND
             permission.user_id = '${user.id}' AND
             permission.is_admin = 1`;
-        runQuery(sql).then(
+        DBUtils.runQuery(sql).then(
             (results) => {
                 console.log(`found ${results.length} goals`);
                 user['goals'] = results;
                 console.log(`user: ${user}`);
             },
-            defaultErrorHandler
+            DBUtils.defaultErrorHandler
         );
 }
 
@@ -121,16 +125,16 @@ function registerLoginEndpoints(app) {
 
     app.post('/login', (req, res) => {
         authenticate(req.body.username, req.body.password, (err, user) => {
-            clearStatusMessages();
+            DBUtils.clearStatusMessages();
 
             if (err) {
                 // 'err' should either be an Error or a string message about what went wrong
                 if (err instanceof Error) {
                     throw err;
                 } else if (typeof err === 'string') {
-                    reportError(res, err);
+                    DBUtils.reportError(res, err);
                 } else {
-                    reportError(res, 'Authentication failed, please check your username and password');
+                    DBUtils.reportError(res, 'Authentication failed, please check your username and password');
                     throw new Error(`Unknown error: ${err}`);
                 }
                 res.redirect('/');
@@ -150,18 +154,22 @@ function registerLoginEndpoints(app) {
                     promises.push(cacheTable(req, 'game'));
                     promises.push(cacheUserGoals(user));
                     promises.push(cacheTable(req, 'goal', `JOIN permission ON (permission.other_id = goal.id AND (goal.private = '0' OR permission.user_id = '${user.id}'))`));
-                    promises.push(refreshContributionCache(req));
+                    promises.push(contributionFuncs.refreshContributionCache(req));
 
                     Promise.all(promises).then(
                         (result) => { // success
                             // Store the user in the session store to be retrieved by other pages
-                            reportSuccess(res, 'Authenticated as ' + user.name + ' click to <a href="/logout">logout</a>');
+                            DBUtils.reportSuccess(res, 'Authenticated as ' + user.name + ' click to <a href="/logout">logout</a>');
                             res.redirect('/user');
                         }, 
-                        defaultErrorHandler
+                        DBUtils.defaultErrorHandler
                     );
                 });
             }
         });
     });
 }
+
+module.exports = {
+    registerEndpoints: registerLoginEndpoints
+};

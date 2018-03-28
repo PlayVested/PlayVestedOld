@@ -1,3 +1,4 @@
+const DBUtils = require('./DBUtils');
 const hash = require('pbkdf2-password')();
 const uuidv4 = require('uuid/v4');
 
@@ -5,7 +6,7 @@ function authenticateUser(req, res, next) {
     if (req.session.user) {
         next();
     } else {
-        reportError(res, 'Access denied!');
+        DBUtils.reportError(res, 'Access denied!');
         res.redirect('/');
     }
 }
@@ -29,26 +30,26 @@ function registerUserEndpoints(app) {
 
         // validate the inputs
         if (!req.body.username) {
-            reportError(res, 'Invalid user name');
+            DBUtils.reportError(res, 'Invalid user name');
             res.redirect('back');
             return;
         } else if (!req.body.password || !req.body.confirm_password) {
-            reportError(res, 'Invalid password');
+            DBUtils.reportError(res, 'Invalid password');
             res.redirect('back');
             return;
         } else if (req.body.password !== req.body.confirm_password) {
-            reportError(res, 'Password does not match');
+            DBUtils.reportError(res, 'Password does not match');
             res.redirect('back');
             return;
         }
 
         // check if the user name is already in use
-        runQuery(`SELECT * FROM user WHERE name = '${req.body.username}'`).then(
+        DBUtils.runQuery(`SELECT * FROM user WHERE name = '${req.body.username}'`).then(
             (userResults) => {
-                clearStatusMessages();
+                DBUtils.clearStatusMessages();
 
                 if (userResults && userResults.length > 0) {
-                    reportError(res, 'User name already taken');
+                    DBUtils.reportError(res, 'User name already taken');
                     res.redirect('back');
                     return;
                 }
@@ -59,23 +60,23 @@ function registerUserEndpoints(app) {
 
                     // store the salt & hash in the "db"
                     const uuid = uuidv4();
-                    runQuery(`INSERT INTO user (id, name, password, salt, hash) VALUES ('${uuid}', '${req.body.username}', '${req.body.password}', '${salt}', '${hash}')`).then(
+                    DBUtils.runQuery(`INSERT INTO user (id, name, password, salt, hash) VALUES ('${uuid}', '${req.body.username}', '${req.body.password}', '${salt}', '${hash}')`).then(
                         (insertResults) => {
                             if (!module.parent) {
                                 console.log(`added user: ${req.body.username}`);
                             }
 
                             // let them know it worked
-                            reportSuccess(res, `Successfully created user ${req.body.username}, now login with your new credentials`);
+                            DBUtils.reportSuccess(res, `Successfully created user ${req.body.username}, now login with your new credentials`);
 
                             // send them to the login page
                             res.redirect('/login');
                         },
-                        defaultErrorHandler
+                        DBUtils.defaultErrorHandler
                     );
                 });
             },
-            defaultErrorHandler
+            DBUtils.defaultErrorHandler
         );
     });
 
@@ -88,11 +89,11 @@ function registerUserEndpoints(app) {
         console.log(`posted settings`);
 
         if (req.body.current_password !== '' && req.body.current_password !== req.session.user.password) {
-            reportError(res, `Current password is incorrect`);
+            DBUtils.reportError(res, `Current password is incorrect`);
             res.redirect('/');
             return;
         } else if (req.body.new_password !== '' && req.body.new_password !== req.body.confirm_password) {
-            reportError(res, `New password does not match`);
+            DBUtils.reportError(res, `New password does not match`);
             res.redirect('/');
             return;
         }
@@ -109,7 +110,7 @@ function registerUserEndpoints(app) {
         hash(hashInput, (err, ret_pass, salt, hash) => {
             console.log(`hashed`);
             if (err) {
-                return reportError(res, err);
+                return DBUtils.reportError(res, err);
             } else if (hash === req.session.user.hash) {
                 const sql = `
                     UPDATE user SET
@@ -122,7 +123,7 @@ function registerUserEndpoints(app) {
                         hash = '${hash}'
                     WHERE
                         id ='${req.session.user.id}'`
-                return runQuery(sql).then(
+                return DBUtils.runQuery(sql).then(
                         (results) => {
                             req.session.user.name = req.body.username;
                             req.session.user.display_name = req.body.display_name;
@@ -132,19 +133,19 @@ function registerUserEndpoints(app) {
                             req.session.user.salt = salt;
                             req.session.user.hash = hash;
 
-                            reportSuccess(res, 'User info updated!');
+                            DBUtils.reportSuccess(res, 'User info updated!');
                             res.redirect('back');
                         },
-                        defaultErrorHandler
+                        DBUtils.defaultErrorHandler
                     );
             } else {
-                reportError(res, 'invalid password');
+                DBUtils.reportError(res, 'invalid password');
             }
         });
     });
 
     app.get('/users', (req, res) => {
-        runQuery(`SELECT name FROM user`).then(
+        DBUtils.runQuery(`SELECT name FROM user`).then(
             (userResults) => {
                 var user_names = 'Current Users:<br>';
                 for (var user of userResults) {
@@ -152,7 +153,12 @@ function registerUserEndpoints(app) {
                 }
                 res.send(user_names);
             },
-            defaultErrorHandler
+            DBUtils.defaultErrorHandler
         );
     });
 }
+
+module.exports = {
+    registerEndpoints: registerUserEndpoints,
+    authenticateUser: authenticateUser
+};

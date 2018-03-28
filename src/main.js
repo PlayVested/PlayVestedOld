@@ -3,6 +3,9 @@ const express = require('express');
 const app = express();
 const path = require('path');
 const session = require('express-session');
+const _ = require('underscore');
+
+const DBUtils = require('./DBUtils')
 
 // config for views
 app.set('view engine', 'ejs');
@@ -17,36 +20,12 @@ app.use(session({
     saveUninitialized: false, // don't create session until something stored
     secret: 'shhhh, very secret'
 }));
-app.use(express.static('../public'));
-
-var storedSuccessMsg = '';
-var storedErrorMsg = '';
-function reportSuccess(res, msg) {
-    storedSuccessMsg = '<p class="msg success">Status: ' + msg + '</p>';
-    if (res && res.locals) {
-        res.locals.message = storedSuccessMsg;
-    }
-}
-function reportError(res, err) {
-    storedErrorMsg = '<p class="msg error">Error: ' + err + '</p>';
-    if (res && res.locals) {
-        res.locals.message = storedErrorMsg;
-    }
-}
-function clearStatusMessages() {
-    storedSuccessMsg = '';
-    storedErrorMsg = '';
-}
+app.use(express.static('./public'));
 
 // generic route used to populate the local copies of data used by HTML templating
 app.use((req, res, next) => {
     res.locals.message = '';
-    if (storedErrorMsg) {
-        res.locals.message = storedErrorMsg;
-    } else if (storedSuccessMsg) {
-        res.locals.message = storedSuccessMsg;
-    }
-    clearStatusMessages();
+    DBUtils.clearStatusMessages();
 
     res.locals.game = req.session.game;
     res.locals.goal = req.session.goal;
@@ -86,15 +65,14 @@ app.get('/testing', (req, res) => {
 });
 
 // register all endpoints from sub-systems
-registerContributionEndpoints(app);
-registerElectionEndpoints(app);
-registerGameEndpoints(app);
-registerGoalEndpoints(app);
-registerInvestmentEndpoints(app);
-registerLoginEndpoints(app);
-registerSupportEndpoints(app);
-registerTierEndpoints(app);
-registerUserEndpoints(app);
+var fs = require('fs');
+var files = fs.readdirSync('./src');
+_.forEach(files, (file) => {
+    var fileModule = require('./' + file);
+    if (fileModule.registerEndpoints) {
+        fileModule.registerEndpoints(app);
+    }
+});
 
 // fallback 404 handling
 // this needs to happen after all valid routes are defined
@@ -111,5 +89,5 @@ app.use((err, req, res, next) => {
 
 if (!module.parent) {
     // start the local server
-    app.listen(3000, () => console.log('Example app listening on port 3000!'));
+    app.listen(3000, () => console.log('Listening on local port 3000!'));
 }
