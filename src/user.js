@@ -1,12 +1,13 @@
 const DBUtils = require('./DBUtils');
 const hash = require('pbkdf2-password')();
+const messageUtils = require('./messageUtils');
 const uuidv4 = require('uuid/v4');
 
 function authenticateUser(req, res, next) {
     if (req.session.user) {
         next();
     } else {
-        DBUtils.reportError(res, 'Access denied!');
+        messageUtils.reportError(res, 'Access denied!');
         res.redirect('/');
     }
 }
@@ -30,15 +31,15 @@ function registerUserEndpoints(app) {
 
         // validate the inputs
         if (!req.body.username) {
-            DBUtils.reportError(res, 'Invalid user name');
+            messageUtils.reportError(res, 'Invalid user name');
             res.redirect('back');
             return;
         } else if (!req.body.password || !req.body.confirm_password) {
-            DBUtils.reportError(res, 'Invalid password');
+            messageUtils.reportError(res, 'Invalid password');
             res.redirect('back');
             return;
         } else if (req.body.password !== req.body.confirm_password) {
-            DBUtils.reportError(res, 'Password does not match');
+            messageUtils.reportError(res, 'Password does not match');
             res.redirect('back');
             return;
         }
@@ -46,10 +47,10 @@ function registerUserEndpoints(app) {
         // check if the user name is already in use
         DBUtils.runQuery(`SELECT * FROM user WHERE name = '${req.body.username}'`).then(
             (userResults) => {
-                DBUtils.clearStatusMessages();
+                messageUtils.clearStatusMessages();
 
                 if (userResults && userResults.length > 0) {
-                    DBUtils.reportError(res, 'User name already taken');
+                    messageUtils.reportError(res, 'User name already taken');
                     res.redirect('back');
                     return;
                 }
@@ -67,7 +68,7 @@ function registerUserEndpoints(app) {
                             }
 
                             // let them know it worked
-                            DBUtils.reportSuccess(res, `Successfully created user ${req.body.username}, now login with your new credentials`);
+                            messageUtils.reportSuccess(res, `Successfully created user ${req.body.username}, now login with your new credentials`);
 
                             // send them to the login page
                             res.redirect('/login');
@@ -89,11 +90,11 @@ function registerUserEndpoints(app) {
         console.log(`posted settings`);
 
         if (req.body.current_password !== '' && req.body.current_password !== req.session.user.password) {
-            DBUtils.reportError(res, `Current password is incorrect`);
+            messageUtils.reportError(res, `Current password is incorrect`);
             res.redirect('/');
             return;
         } else if (req.body.new_password !== '' && req.body.new_password !== req.body.confirm_password) {
-            DBUtils.reportError(res, `New password does not match`);
+            messageUtils.reportError(res, `New password does not match`);
             res.redirect('/');
             return;
         }
@@ -110,7 +111,7 @@ function registerUserEndpoints(app) {
         hash(hashInput, (err, ret_pass, salt, hash) => {
             console.log(`hashed`);
             if (err) {
-                return DBUtils.reportError(res, err);
+                return messageUtils.reportError(res, err);
             } else if (hash === req.session.user.hash) {
                 const sql = `
                     UPDATE user SET
@@ -133,13 +134,13 @@ function registerUserEndpoints(app) {
                             req.session.user.salt = salt;
                             req.session.user.hash = hash;
 
-                            DBUtils.reportSuccess(res, 'User info updated!');
+                            messageUtils.reportSuccess(res, 'User info updated!');
                             res.redirect('back');
                         },
                         DBUtils.defaultErrorHandler
                     );
             } else {
-                DBUtils.reportError(res, 'invalid password');
+                messageUtils.reportError(res, 'invalid password');
             }
         });
     });

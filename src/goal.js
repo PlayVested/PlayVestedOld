@@ -1,11 +1,13 @@
+const cacheUtils = require('./cacheUtils');
 const DBUtils = require('./DBUtils');
+const messageUtils = require('./messageUtils');
 const uuidv4 = require('uuid/v4');
 
 function authenticateGoal(req, res, next) {
     if (req.session.user && req.session.goal) {
         next();
     } else {
-        DBUtils.reportError(res, 'Access denied!');
+        messageUtils.reportError(res, 'Access denied!');
         res.redirect('/');
     }
 }
@@ -32,7 +34,7 @@ function registerGoalEndpoints(app) {
                     // now render the goal info
                     res.redirect('/goal');
                 } else {
-                    DBUtils.reportError(res, 'Failed to find goal, please try again');
+                    messageUtils.reportError(res, 'Failed to find goal, please try again');
                     res.redirect('/');
                 }
             }
@@ -48,7 +50,7 @@ function registerGoalEndpoints(app) {
 
     app.post('/goal', authenticateGoal, (req, res) => {
         if (req.body.goal_id !== req.session.goal.id) {
-            DBUtils.reportError(res, `Request to update goal doesn't match active goal`);
+            messageUtils.reportError(res, `Request to update goal doesn't match active goal`);
             req.redirect('back');
             return;
         }
@@ -65,9 +67,9 @@ function registerGoalEndpoints(app) {
         DBUtils.runQuery(sql).then(
             (updateResults) => {
                 // update the list of goals stored in the session
-                cacheUserPermissions(req.session.user, 'goal').then(
+                cacheUtils.cacheUserPermissions(req.session.user, 'goal').then(
                     (cacheResult) => {
-                        DBUtils.reportSuccess(res, `Updated ${req.body.name}`);
+                        messageUtils.reportSuccess(res, `Updated ${req.body.name}`);
                         res.redirect(`/goal/${req.body.id}`);
                     }
                 ).catch((error) => {
@@ -91,7 +93,7 @@ function registerGoalEndpoints(app) {
     
         // validate the inputs
         if (!goalName) {
-            DBUtils.reportError(res, 'Invalid name');
+            messageUtils.reportError(res, 'Invalid name');
             res.redirect('back');
             return;
         }
@@ -99,10 +101,10 @@ function registerGoalEndpoints(app) {
         // check if the goal name is already in use
         DBUtils.runQuery(`SELECT * FROM goal WHERE name = '${goalName}'`).then(
             (goalResults) => {
-                DBUtils.clearStatusMessages();
+                messageUtils.clearStatusMessages();
 
                 if (goalResults && goalResults.length > 0) {
-                    DBUtils.reportError(res, 'Name already taken');
+                    messageUtils.reportError(res, 'Name already taken');
                     res.redirect('back');
                     return;
                 }
@@ -155,12 +157,12 @@ function registerGoalEndpoints(app) {
                     (allResults) => {
                         // update the list of goals stored in the session
                         promises = [];
-                        promises.push(cacheTable(req, 'goal', `JOIN permission ON (permission.other_id = goal.id AND (goal.private = '0' OR permission.user_id = '${req.session.user.id}'))`));
-                        promises.push(cacheUserPermissions(req.session.user, 'game'));
+                        promises.push(cacheUtils.cacheTable(req, 'goal', `JOIN permission ON (permission.other_id = goal.id AND (goal.private = '0' OR permission.user_id = '${req.session.user.id}'))`));
+                        promises.push(cacheUtils.cacheUserPermissions(req.session.user, 'game'));
                         Promise.all(promises).then(
                             (cacheResult) => {
                                 // let them know it worked
-                                DBUtils.reportSuccess(res, `Successfully created goal ${goalName}`);
+                                messageUtils.reportSuccess(res, `Successfully created goal ${goalName}`);
 
                                 // send them to the goal page so they can join the group immediately
                                 res.redirect(`/goal/${goal.id}`);
@@ -170,7 +172,7 @@ function registerGoalEndpoints(app) {
                         });
                     },
                     (err) => {
-                        DBUtils.reportError(res, `Error creating goal: ${err}`);
+                        messageUtils.reportError(res, `Error creating goal: ${err}`);
 
                         // if either fails, delete them both
                         promises = [];
@@ -214,8 +216,8 @@ function registerGoalEndpoints(app) {
                     )`;
                 DBUtils.runQuery(join_sql).then(
                     (response) => {
-                        DBUtils.reportSuccess(res, 'Successfully joined goal');
-                        cacheUserGoals(req.session.user);
+                        messageUtils.reportSuccess(res, 'Successfully joined goal');
+                        cacheUtils.cacheUserGoals(req.session.user);
                         res.redirect('find_goals');
                     }
                 ).catch((error) => {
@@ -247,8 +249,8 @@ function registerGoalEndpoints(app) {
                         connection_id = '${req.body.goal_id}'`;
                 DBUtils.runQuery(join_sql).then(
                     (response) => {
-                        DBUtils.reportSuccess('Successfully left goal');
-                        cacheUserGoals(req.session.user);
+                        messageUtils.reportSuccess('Successfully left goal');
+                        cacheUtils.cacheUserGoals(req.session.user);
                         res.redirect('user');
                     }
                 ).catch((error) => {

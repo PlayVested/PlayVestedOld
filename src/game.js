@@ -1,11 +1,13 @@
+const cacheUtils = require('./cacheUtils');
 const DBUtils = require('./DBUtils');
+const messageUtils = require('./messageUtils');
 const uuidv4 = require('uuid/v4');
 
 function authenticateGame(req, res, next) {
     if (req.session.user && req.session.game) {
         next();
     } else {
-        DBUtils.reportError(res, 'Access denied!');
+        messageUtils.reportError(res, 'Access denied!');
         res.redirect('/');
     }
 }
@@ -34,7 +36,7 @@ function registerGameEndpoints(app) {
                     // now load reward tier data for the given game
                     res.redirect('/tier');
                 } else {
-                    DBUtils.reportError(res, 'Failed to find game, please try again');
+                    messageUtils.reportError(res, 'Failed to find game, please try again');
                     res.redirect('/');
                 }
             },
@@ -49,7 +51,7 @@ function registerGameEndpoints(app) {
 
     app.post('/game', authenticateGame, (req, res) => {
         if (req.body.id !== req.session.game.id) {
-            DBUtils.reportError(res, `Request to update game doesn't match active game`);
+            messageUtils.reportError(res, `Request to update game doesn't match active game`);
             req.redirect('back');
             return;
         }
@@ -57,9 +59,9 @@ function registerGameEndpoints(app) {
         DBUtils.runQuery(`UPDATE game SET name = '${req.body.name}', decay_rate = '${req.body.decay_rate}' WHERE id = '${req.body.id}'`).then(
             (updateResults) => {
                 // update the list of games stored in the session
-                cacheUserPermissions(req.session.user, 'game').then(
+                cacheUtils.cacheUserPermissions(req.session.user, 'game').then(
                     (cacheResult) => {
-                        DBUtils.reportSuccess(res, `Updated ${req.body.name}`);
+                        messageUtils.reportSuccess(res, `Updated ${req.body.name}`);
                         res.redirect(`/game/${req.body.id}`);
                     },
                     DBUtils.defaultErrorHandler
@@ -81,7 +83,7 @@ function registerGameEndpoints(app) {
     
         // validate the inputs
         if (!gameName) {
-            DBUtils.reportError(res, 'Invalid name');
+            messageUtils.reportError(res, 'Invalid name');
             res.redirect('back');
             return;
         }
@@ -89,10 +91,10 @@ function registerGameEndpoints(app) {
         // check if the game name is already in use
         DBUtils.runQuery(`SELECT * FROM game WHERE name = '${gameName}'`).then(
             (gameResults) => {
-                DBUtils.clearStatusMessages();
+                messageUtils.clearStatusMessages();
 
                 if (gameResults && gameResults.length > 0) {
-                    DBUtils.reportError(res, 'Name already taken');
+                    messageUtils.reportError(res, 'Name already taken');
                     res.redirect('back');
                     return;
                 }
@@ -111,12 +113,12 @@ function registerGameEndpoints(app) {
                     (allResults) => {
                         // update the list of games stored in the session
                         promises = [];
-                        promises.push(cacheTable(req, 'game'));
-                        promises.push(cacheUserPermissions(req.session.user, 'game'));
+                        promises.push(cacheUtils.cacheTable(req, 'game'));
+                        promises.push(cacheUtils.cacheUserPermissions(req.session.user, 'game'));
                         Promise.all(promises).then(
                             (cacheResult) => {
                                 // let them know it worked
-                                DBUtils.reportSuccess(res, `Successfully created game ${gameName}`);
+                                messageUtils.reportSuccess(res, `Successfully created game ${gameName}`);
 
                                 // send them to the game page so they can edit tier info immediately
                                 req.session.game = gameResults[0];

@@ -1,28 +1,21 @@
+const cacheUtils = require('./cacheUtils');
 const DBUtils = require('./DBUtils');
+const messageUtils = require('./messageUtils');
 const uuidv4 = require('uuid/v4');
 
 function authenticateElection(req, res, next) {
     if (req.session.user) {
         next();
     } else {
-        DBUtils.reportError(res, 'Manipulating election data requires an active user!');
+        messageUtils.reportError(res, 'Manipulating election data requires an active user!');
         res.redirect('/');
     }
-}
-
-function refreshElectionCache(req) {
-    return DBUtils.runQuery(`SELECT * FROM election WHERE user_id = '${req.session.user.id}'`).then(
-        (electionResults) => {
-            req.session.user.election = electionResults;
-        },
-        DBUtils.defaultErrorHandler
-    );
 }
 
 function registerElectionEndpoints(app) {
     // hitting it without an ID will load all valid elections for the active user
     app.get('/election', authenticateElection, (req, res) => {
-        refreshElectionCache(req).then(
+        cacheUtils.cacheElections(req).then(
             (results) => {
                 res.render('election');
             },
@@ -31,7 +24,7 @@ function registerElectionEndpoints(app) {
     });
 
     app.post('/election', authenticateElection, (req, res) => {
-        DBUtils.clearStatusMessages();
+        messageUtils.clearStatusMessages();
 
         var updates = [];
         if (req.body.id instanceof Array) {
@@ -44,7 +37,7 @@ function registerElectionEndpoints(app) {
 
         Promise.all(updates).then(
             (allResults) => {
-                DBUtils.reportSuccess(res, `Successfully updated election data`);
+                messageUtils.reportSuccess(res, `Successfully updated election data`);
                 res.redirect('/election');
             },
             DBUtils.defaultErrorHandler
@@ -61,7 +54,7 @@ function registerElectionEndpoints(app) {
 
         DBUtils.runQuery(`INSERT INTO election (id, user_id, invest_id, percentage) VALUES ('${election.id}', '${election.user_id}', '${election.invest_id}', '${election.percentage}')`).then(
             (createResults) => {
-                refreshElectionCache(req, res);
+                cacheUtils.cacheElections(req, res);
             },
             DBUtils.defaultErrorHandler
         );

@@ -1,11 +1,13 @@
+const cacheUtils = require('./cacheUtils');
 const DBUtils = require('./DBUtils');
+const messageUtils = require('./messageUtils');
 const uuidv4 = require('uuid/v4');
 
 function authenticateInvestment(req, res, next) {
     if (req.session.user && req.session.invest) {
         next();
     } else {
-        DBUtils.reportError(res, 'Access denied!');
+        messageUtils.reportError(res, 'Access denied!');
         res.redirect('/');
     }
 }
@@ -32,7 +34,7 @@ function registerInvestmentEndpoints(app) {
                     req.session.invest = investResults[0];
                     res.redirect('/invest');
                 } else {
-                    DBUtils.reportError(res, 'Failed to find investment, please try again');
+                    messageUtils.reportError(res, 'Failed to find investment, please try again');
                     res.redirect('/');
                 }
             },
@@ -42,7 +44,7 @@ function registerInvestmentEndpoints(app) {
 
     app.post('/invest', authenticateInvestment, (req, res) => {
         if (req.body.id !== req.session.invest.id) {
-            DBUtils.reportError(res, `Request to update investment doesn't match active investment`);
+            messageUtils.reportError(res, `Request to update investment doesn't match active investment`);
             req.redirect('back');
             return;
         }
@@ -50,9 +52,9 @@ function registerInvestmentEndpoints(app) {
         DBUtils.runQuery(`UPDATE invest SET name = '${req.body.name}' WHERE id = '${req.body.id}'`).then(
             (updateResults) => {
                 // update the list of investments stored in the session
-                cacheUserPermissions(req.session.user, 'invest').then(
+                cacheUtils.cacheUserPermissions(req.session.user, 'invest').then(
                     (cacheResult) => {
-                        DBUtils.reportSuccess(res, `Updated ${req.body.name}`);
+                        messageUtils.reportSuccess(res, `Updated ${req.body.name}`);
                         res.redirect(`/invest/${req.body.id}`);
                     },
                     DBUtils.defaultErrorHandler
@@ -79,7 +81,7 @@ function registerInvestmentEndpoints(app) {
     
         // validate the inputs
         if (!investName) {
-            DBUtils.reportError(res, 'Invalid name');
+            messageUtils.reportError(res, 'Invalid name');
             res.redirect('back');
             return;
         }
@@ -87,10 +89,10 @@ function registerInvestmentEndpoints(app) {
         // check if the investment name is already in use
         DBUtils.runQuery(`SELECT * FROM invest WHERE name = '${investName}'`).then(
             (investResults) => {
-                DBUtils.clearStatusMessages();
+                messageUtils.clearStatusMessages();
 
                 if (investResults && investResults.length > 0) {
-                    DBUtils.reportError(res, 'Name already taken');
+                    messageUtils.reportError(res, 'Name already taken');
                     res.redirect('back');
                     return;
                 }
@@ -108,12 +110,12 @@ function registerInvestmentEndpoints(app) {
                     (allResults) => {
                         // update the list of investments stored in the session
                         promises = [];
-                        promises.push(cacheTable(req, 'invest'));
-                        promises.push(cacheUserPermissions(req.session.user, 'invest'));
+                        promises.push(cacheUtils.cacheTable(req, 'invest'));
+                        promises.push(cacheUtils.cacheUserPermissions(req.session.user, 'invest'));
                         Promise.all(promises).then(
                             (cacheResult) => {
                                 // let them know it worked
-                                DBUtils.reportSuccess(res, `Successfully created investment ${investName}`);
+                                messageUtils.reportSuccess(res, `Successfully created investment ${investName}`);
 
                                 // send them to the investment page so they can edit the info immediately
                                 req.session.invest = invest;

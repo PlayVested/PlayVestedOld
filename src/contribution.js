@@ -1,39 +1,21 @@
+const cacheUtils = require('./cacheUtils');
 const DBUtils = require('./DBUtils');
+const messageUtils = require('./messageUtils');
 const uuidv4 = require('uuid/v4');
 
 function authenticateContribution(req, res, next) {
     if (req.session.user) {
         next();
     } else {
-        DBUtils.reportError(res, 'Manipulating contribution data requires an active user!');
+        messageUtils.reportError(res, 'Manipulating contribution data requires an active user!');
         res.redirect('/');
     }
-}
-
-function refreshContributionCache(req, res) {
-    if (!req.session.user) {
-        if (res) {
-            res.redirect('/');
-        }
-        console.log(`failed to refresh contributions`);
-        return Promise.resolve([]);
-    }
-
-    return DBUtils.runQuery(`SELECT game_id, invest_id, timestamp, SUM(amount) AS amount FROM contribution WHERE user_id = '${req.session.user.id}' GROUP BY invest_id, game_id ORDER BY amount DESC`).then(
-        (contributionResults) => {
-            req.session.user.contribution = contributionResults;
-            if (res) {
-                res.redirect('/user');
-            }
-        },
-        DBUtils.defaultErrorHandler
-    );
 }
 
 function registerContributionEndpoints(app) {
     // hitting it without an ID will load all valid contributions for the active user
     app.get('/contribution', authenticateContribution, (req, res) => {
-        refreshContributionCache(req, res);
+        cacheUtils.cacheContributions(req, res);
     });
 
     app.get('/create_contribution', authenticateContribution, (req, res) => {
@@ -62,7 +44,7 @@ function registerContributionEndpoints(app) {
             )`;
         DBUtils.runQuery(sql).then(
             (createResults) => {
-                refreshContributionCache(req, res);
+                cacheUtils.cacheContributions(req, res);
             },
             DBUtils.defaultErrorHandler
         );
@@ -91,6 +73,5 @@ function registerContributionEndpoints(app) {
 }
 
 module.exports = {
-    registerEndpoints: registerContributionEndpoints,
-    refreshContributionCache: refreshContributionCache
+    registerEndpoints: registerContributionEndpoints
 };

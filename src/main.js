@@ -5,7 +5,8 @@ const path = require('path');
 const session = require('express-session');
 const _ = require('underscore');
 
-const DBUtils = require('./DBUtils')
+const DBUtils = require('./DBUtils');
+const messageUtils = require('./messageUtils');
 
 // config for views
 app.set('view engine', 'ejs');
@@ -25,7 +26,7 @@ app.use(express.static('./public'));
 // generic route used to populate the local copies of data used by HTML templating
 app.use((req, res, next) => {
     res.locals.message = '';
-    DBUtils.clearStatusMessages();
+    messageUtils.clearStatusMessages();
 
     res.locals.game = req.session.game;
     res.locals.goal = req.session.goal;

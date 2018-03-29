@@ -1,37 +1,25 @@
+const cacheUtils = require('./cacheUtils');
 const DBUtils = require('./DBUtils');
+const messageUtils = require('./messageUtils');
 const uuidv4 = require('uuid/v4');
 
 function authenticateTier(req, res, next) {
     if (req.session.game) {
         next();
     } else {
-        DBUtils.reportError(res, 'Manipulating tier data requires an active game!');
+        messageUtils.reportError(res, 'Manipulating tier data requires an active game!');
         res.redirect('/game');
     }
-}
-
-function refreshTierCache(req, res) {
-    if (!req.session.game) {
-        return;
-    }
-
-    DBUtils.runQuery(`SELECT * FROM tier WHERE game_id = '${req.session.game.id}' ORDER BY reward`).then(
-        (tierResults) => {
-            req.session.game.tier = tierResults;
-            res.redirect('/game');
-        },
-        DBUtils.defaultErrorHandler
-    );
 }
 
 function registerTierEndpoints(app) {
     // hitting it without an ID will load all valid tiers for the active game
     app.get('/tier', authenticateTier, (req, res) => {
-        refreshTierCache(req, res);
+        cacheUtils.cacheTiers(req, res);
     });
 
     app.post('/tier', authenticateTier, (req, res) => {
-        DBUtils.clearStatusMessages();
+        messageUtils.clearStatusMessages();
 
         var updates = [];
         if (req.body.id instanceof Array) {
@@ -44,7 +32,7 @@ function registerTierEndpoints(app) {
 
         Promise.all(updates).then(
             (allResults) => {
-                DBUtils.reportSuccess(res, `Successfully updated tier data`);
+                messageUtils.reportSuccess(res, `Successfully updated tier data`);
                 res.redirect('/tier');
             },
             DBUtils.defaultErrorHandler
@@ -61,7 +49,7 @@ function registerTierEndpoints(app) {
 
         DBUtils.runQuery(`INSERT INTO tier (id, game_id, contribution, reward) VALUES ('${tier.id}', '${tier.game_id}', '${tier.contribution}', '${tier.reward}')`).then(
             (createResults) => {
-                refreshTierCache(req, res);
+                cacheUtils.cacheTiers(req, res);
             },
             DBUtils.defaultErrorHandler
         );
